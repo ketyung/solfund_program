@@ -32,9 +32,7 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
         }
 
         PoolInstruction::UpdatePoolWallet{wallet} => {
-           // update_pool_wallet(wallet, program_id, accounts) 
-           msg!("Going to update!:{:?}", wallet);
-           Ok(())
+           update_pool_wallet(wallet, program_id, accounts) 
         }
     }
 
@@ -68,12 +66,29 @@ fn create_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[Accou
 
         msg!("Proceed!");   
 
-       // wallet.is_initialized = true ;
-
-        PoolWallet::pack(wallet, &mut account.data.borrow_mut())?;
+        let mut w = wallet;
+        w.is_initialized = true ;
+        PoolWallet::pack(w, &mut account.data.borrow_mut())?;
 
     }
     Ok(())
+}
+
+fn update_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
+    let account_info_iter = &mut accounts.iter();
+
+    let account = next_account_info(account_info_iter)?;
+
+    if is_account_program_owner(program_id, account).unwrap() {
+
+        let mut w = PoolWallet::unpack_unchecked(&account.data.borrow())?;
+
+        w.token_count = wallet.token_count;
+        w.max_investor_count = wallet.max_investor_count;
+
+        PoolWallet::pack(w, &mut account.data.borrow_mut())?;
+    }
+    Ok(())
 }
