@@ -13,7 +13,7 @@ use {
     },
     
     crate::instruction::PoolInstruction, 
-    crate::state::{PoolWallet},
+    crate::state::{FundPool},
 };
 
 
@@ -26,12 +26,12 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreatePoolWallet{wallet} => {
+        PoolInstruction::CreateFundPool{wallet} => {
 
             create_pool_wallet(wallet, program_id, accounts)
         }
 
-        PoolInstruction::UpdatePoolWallet{wallet} => {
+        PoolInstruction::UpdateFundPool{wallet} => {
            update_pool_wallet(wallet, program_id, accounts) 
         }
     }
@@ -55,7 +55,7 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 }
 
 
-fn create_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+fn create_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
@@ -68,13 +68,13 @@ fn create_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[Accou
 
         let mut w = wallet;
         w.is_initialized = true ;
-        PoolWallet::pack(w, &mut account.data.borrow_mut())?;
+        FundPool::pack(w, &mut account.data.borrow_mut())?;
 
     }
     Ok(())
 }
 
-fn update_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+fn update_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
@@ -83,12 +83,12 @@ fn update_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[Accou
 
     if is_account_program_owner(program_id, account).unwrap() {
 
-        let mut w = PoolWallet::unpack_unchecked(&account.data.borrow())?;
+        let mut w = FundPool::unpack_unchecked(&account.data.borrow())?;
 
         w.token_count = wallet.token_count;
         w.max_investor_count = wallet.max_investor_count;
 
-        PoolWallet::pack(w, &mut account.data.borrow_mut())?;
+        FundPool::pack(w, &mut account.data.borrow_mut())?;
     }
     Ok(())
 }

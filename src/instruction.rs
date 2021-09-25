@@ -1,5 +1,5 @@
 use crate::{error::PoolError};
-use crate::state::{PoolWallet};
+use crate::state::{FundPool};
 
 use solana_program::{
     program_error::ProgramError,
@@ -10,14 +10,14 @@ use solana_program::{
 #[derive(Clone, Debug, PartialEq)]
 pub enum PoolInstruction {
 
-    CreatePoolWallet {
+    CreateFundPool {
 
-        wallet : PoolWallet, 
+        wallet : FundPool, 
     },
 
-    UpdatePoolWallet {
+    UpdateFundPool {
 
-        wallet : PoolWallet,
+        wallet : FundPool,
     },
 
 }
@@ -31,7 +31,7 @@ impl PoolInstruction {
     pub fn unpack(input : &[u8]) -> Result<Self, ProgramError> {
 
         // the first byte indicating the module, in this case
-        // 1 is the PoolWallet
+        // 1 is the FundPool
         let (module, rest) = input.split_first().ok_or(PoolError::InvalidModule)?;
         
         msg!("Current module being accessed is :{}", module);
@@ -65,17 +65,17 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                let w = PoolWallet::unpack(rest).unwrap();
+                let w = FundPool::unpack(rest).unwrap();
 
-                Self::CreatePoolWallet{ wallet : w}
+                Self::CreateFundPool{ wallet : w}
 
             },
 
             &ACTION_UPDATE => {
 
-                let w = PoolWallet::unpack(rest).unwrap();
+                let w = FundPool::unpack(rest).unwrap();
 
-                Self::UpdatePoolWallet{ wallet : w}
+                Self::UpdateFundPool{ wallet : w}
    
             }
             _ => return Err(PoolError::InvalidAction.into()),

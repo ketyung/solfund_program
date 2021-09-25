@@ -1,4 +1,3 @@
-use borsh::{BorshDeserialize, BorshSerialize};
 use solana_program::{
     pubkey::{Pubkey, PUBKEY_BYTES},
     program_error::ProgramError,
@@ -7,8 +6,63 @@ use solana_program::{
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 
-#[derive(Clone, Debug, BorshSerialize, BorshDeserialize, PartialEq)]
-pub struct PoolWallet {
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct PoolMarket {
+
+    fund_pools : Vec<Pubkey>
+}
+
+impl PoolMarket {
+
+    pub fn new() -> Self {
+
+        PoolMarket{
+
+            fund_pools : Vec::new()
+        }
+    }
+}
+
+impl PoolMarket {
+
+    pub fn add_fund_pool (&mut self,  pubkey : Pubkey){
+
+        if !self.fund_pools.contains(&pubkey){
+
+            self.fund_pools.push(pubkey);
+        }
+    }
+
+
+    pub fn remove_fund_pool(&mut self, pubkey : Pubkey) {
+
+        let idx = self.fund_pools.iter().position(|&r| r == pubkey);
+        if idx.is_some() {
+
+            self.fund_pools.remove(idx.unwrap());
+        }
+    }
+
+    pub fn all(&self) -> Vec<Pubkey>{
+
+        self.fund_pools.clone()
+    }
+
+    pub fn clear(&mut self){
+
+        self.fund_pools.clear();
+    }
+}
+
+
+
+
+
+
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct FundPool {
 
     pub is_initialized: bool,
 
@@ -22,12 +76,12 @@ pub struct PoolWallet {
 }
 
 
-impl Sealed for PoolWallet {}
+impl Sealed for FundPool {}
 
 
 const POOL_WALLET_LENGTH : usize = 43 ; // 1 + 32 + 8 + 2
 
-impl Pack for PoolWallet {
+impl Pack for FundPool {
 
     const LEN: usize = POOL_WALLET_LENGTH;
 
@@ -72,7 +126,7 @@ impl Pack for PoolWallet {
     }
 }
 
-impl IsInitialized for PoolWallet {
+impl IsInitialized for FundPool {
     fn is_initialized(&self) -> bool {
         
         self.is_initialized
