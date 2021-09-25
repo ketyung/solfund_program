@@ -107,7 +107,7 @@ impl Pack for PoolMarket {
         let mut offset = 0 ;
 
 
-        let mut new_pools = Vec::new();
+        let mut new_pools =  Vec::with_capacity(pools_len as usize + 1);
 
         for _ in 0..pools_len {
 
