@@ -15,7 +15,10 @@ pub enum PoolInstruction {
         wallet : PoolWallet, 
     },
 
-    UpdatePoolWallet,
+    UpdatePoolWallet {
+
+        wallet : PoolWallet,
+    },
 
 }
 
@@ -38,13 +41,15 @@ impl PoolInstruction {
         })
 
     }
+}
 
+
+impl PoolInstruction{
 
     fn unpack_pool_wallet(input : &[u8])-> Result<Self, ProgramError>{
 
         let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
 
-       
         msg!("Wallet's action is {}",action);
         
         Ok(match action  {
@@ -56,7 +61,13 @@ impl PoolInstruction {
                 Self::CreatePoolWallet{ wallet : w}
 
             },
-            2 => Self::UpdatePoolWallet,
+            2 => {
+
+                let w = PoolWallet::unpack(rest).unwrap();
+
+                Self::UpdatePoolWallet{ wallet : w}
+   
+            }
             _ => return Err(PoolError::InvalidAction.into()),
 
         })
