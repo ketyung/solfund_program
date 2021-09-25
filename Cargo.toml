@@ -1,15 +1,34 @@
 [package]
 name = "program"
-version = "0.1.0"
+version = "0.1.2"
+description = "A test on-chain program (smart contract) written in Rust"
+authors = ["K Y Chee <ketyung@techchee.com>"]
+repository = "https://github.com/ketyung/solanfund"
+license = "MIT"
+homepage = "https://blog.techchee.com/"
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[features]
+no-entrypoint = []
+test-bpf = []
 
 [dependencies]
 solana-program = "1.7.9"
 borsh = "0.9.1"
 borsh-derive = "0.9.1"
+num-derive = "0.3"
+num-traits = "0.2"
+num_enum = "0.5.4"
+thiserror = "1.0"
+arrayref = "0.3.6"
+# spl-token = { version = "3.1.1", features = ["no-entrypoint"] }
 
 [dev-dependencies]
 solana-program-test = "=1.7.9"
 solana-sdk = "=1.7.9"
+
+[lib]
+name = "solafund2"
+crate-type = ["cdylib", "lib"]
