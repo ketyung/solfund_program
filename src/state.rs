@@ -40,7 +40,7 @@ impl PoolMarket {
                 self.fund_pools.push(pubkey);
             }
         }
-               
+
     }
 
 
@@ -65,7 +65,29 @@ impl PoolMarket {
 }
 
 
+impl Sealed for PoolMarket{}
 
+impl Pack for PoolMarket {
+
+    const LEN: usize = PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT;
+
+    fn pack_into_slice(&self, dst: &mut [u8]) {
+
+        const L : usize = PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT; 
+
+        let output = array_mut_ref![dst, 0, L];
+
+        msg!("will implement later:: {}, {:?}", L, output);
+       
+    }
+
+    fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
+
+        msg!("will implement later:: {:?}", src);
+        
+        Ok(Self::new())
+    }
+}
 
 
 
