@@ -12,6 +12,9 @@ pub enum PoolError {
     #[error("Invalid module")]
     InvalidModule,
 
+    #[error("Invalid action")]
+    InvalidAction,
+
 }
 
 impl From<PoolError> for ProgramError {
