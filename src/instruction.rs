@@ -22,6 +22,10 @@ pub enum PoolInstruction {
 
 }
 
+
+const MODULE_POOL_WALLET : u8 = 1;
+
+
 impl PoolInstruction {
 
     pub fn unpack(input : &[u8]) -> Result<Self, ProgramError> {
@@ -34,7 +38,7 @@ impl PoolInstruction {
 
         Ok(match module {
 
-            1 => Self::unpack_pool_wallet(rest)?,
+            &MODULE_POOL_WALLET => Self::unpack_pool_wallet(rest)?,
 
             _ => return Err(PoolError::InvalidModule.into()),
 
@@ -42,6 +46,11 @@ impl PoolInstruction {
 
     }
 }
+
+
+const ACTION_CREATE : u8  = 1;
+
+const ACTION_UPDATE : u8  = 2;
 
 
 impl PoolInstruction{
@@ -54,14 +63,15 @@ impl PoolInstruction{
         
         Ok(match action  {
 
-            1 => {
+            &ACTION_CREATE => {
 
                 let w = PoolWallet::unpack(rest).unwrap();
 
                 Self::CreatePoolWallet{ wallet : w}
 
             },
-            2 => {
+
+            &ACTION_UPDATE => {
 
                 let w = PoolWallet::unpack(rest).unwrap();
 
