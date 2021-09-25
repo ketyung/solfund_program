@@ -106,16 +106,23 @@ impl Pack for PoolMarket {
 
         let mut offset = 0 ;
 
+
+        let mut new_pools = Vec::new();
+
         for _ in 0..pools_len {
 
-            //let pk = array_ref![]
+            let pk = array_ref![pools, offset, PUBKEY_BYTES];
 
+            new_pools.push(Pubkey::new_from_array(*pk));
+
+            offset += PUBKEY_BYTES;
         }
 
+        Ok(Self{
 
-        msg!("will implement later:: {:?}", src);
-        
-        Ok(Self::new())
+            fund_pools : new_pools,
+            pool_size : pools_len as u16 ,
+        })
     }
 }
 
