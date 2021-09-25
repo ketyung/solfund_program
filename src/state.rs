@@ -10,7 +10,10 @@ use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 #[derive(Clone, Debug, PartialEq)]
 pub struct PoolMarket {
 
-    fund_pools : Vec<Pubkey>
+    fund_pools : Vec<Pubkey>,
+
+    pool_size : u16 
+
 }
 
 impl PoolMarket {
@@ -19,7 +22,9 @@ impl PoolMarket {
 
         PoolMarket{
 
-            fund_pools : Vec::new()
+            fund_pools : Vec::new(),
+
+            pool_size : 0,
         }
     }
 }
@@ -38,6 +43,8 @@ impl PoolMarket {
             if !self.fund_pools.contains(&pubkey){
 
                 self.fund_pools.push(pubkey);
+
+                self.pool_size = self.fund_pools.len() as u16;
             }
         }
 
@@ -50,6 +57,8 @@ impl PoolMarket {
         if idx.is_some() {
 
             self.fund_pools.remove(idx.unwrap());
+            self.pool_size = self.fund_pools.len() as u16;
+
         }
     }
 
@@ -61,6 +70,8 @@ impl PoolMarket {
     pub fn clear(&mut self){
 
         self.fund_pools.clear();
+        self.pool_size = self.fund_pools.len() as u16;
+       
     }
 }
 
@@ -69,19 +80,38 @@ impl Sealed for PoolMarket{}
 
 impl Pack for PoolMarket {
 
-    const LEN: usize = PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT;
+    const LEN: usize = (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + 2;
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
 
-        const L : usize = PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT; 
+        const L : usize = (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + 2; 
 
         let output = array_mut_ref![dst, 0, L];
+
+
 
         msg!("will implement later:: {}, {:?}", L, output);
        
     }
 
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
+
+        const L : usize = (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + 2; 
+
+        let input = array_ref![src, 0, L];
+        
+        let (pools, pools_len) = array_refs![input,L-2 ,2];
+
+        let pools_len = u16::from_le_bytes(*pools_len);
+
+        let mut offset = 0 ;
+
+        for _ in 0..pools_len {
+
+            //let pk = array_ref![]
+
+        }
+
 
         msg!("will implement later:: {:?}", src);
         
