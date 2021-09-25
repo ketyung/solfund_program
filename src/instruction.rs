@@ -1,15 +1,19 @@
 use crate::{error::PoolError};
-//use crate::state::{PoolWallet};
+use crate::state::{PoolWallet};
 
 use solana_program::{
     program_error::ProgramError,
     msg, 
+    program_pack::{Pack},
 };
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PoolInstruction {
 
-    InitPoolWallet,
+    CreatePoolWallet {
+
+        wallet : PoolWallet, 
+    },
 
     UpdatePoolWallet,
 
@@ -38,14 +42,20 @@ impl PoolInstruction {
 
     fn unpack_pool_wallet(input : &[u8])-> Result<Self, ProgramError>{
 
-        let (action, _rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
+        let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
 
        
         msg!("Wallet's action is {}",action);
         
         Ok(match action  {
 
-            1 => Self::InitPoolWallet,
+            1 => {
+
+                let w = PoolWallet::unpack(rest).unwrap();
+
+                Self::CreatePoolWallet{ wallet : w}
+
+            },
             2 => Self::UpdatePoolWallet,
             _ => return Err(PoolError::InvalidAction.into()),
 
