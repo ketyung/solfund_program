@@ -24,14 +24,23 @@ impl PoolMarket {
     }
 }
 
+
+
+const POOL_MARKET_SIZE_LIMIT : usize = 256;
+
 impl PoolMarket {
 
+    
     pub fn add_fund_pool (&mut self,  pubkey : Pubkey){
 
-        if !self.fund_pools.contains(&pubkey){
+        if self.fund_pools.len() < POOL_MARKET_SIZE_LIMIT  {
 
-            self.fund_pools.push(pubkey);
+            if !self.fund_pools.contains(&pubkey){
+
+                self.fund_pools.push(pubkey);
+            }
         }
+               
     }
 
 
