@@ -5,6 +5,7 @@ use {
         msg,
         pubkey::Pubkey,
         program_error::ProgramError,
+        program_pack::{Pack},
         //program::{invoke},
         // system_instruction,
        // instruction::{AccountMeta},
@@ -66,6 +67,11 @@ fn create_pool_wallet(wallet : PoolWallet, program_id: &Pubkey,accounts: &[Accou
     if is_account_program_owner(program_id, account).unwrap() {
 
         msg!("Proceed!");   
+
+       // wallet.is_initialized = true ;
+
+        PoolWallet::pack(wallet, &mut account.data.borrow_mut())?;
+
     }
     Ok(())
 
