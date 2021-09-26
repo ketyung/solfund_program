@@ -16,13 +16,15 @@ pub struct PoolMarket {
 
 }
 
+pub const POOL_MARKET_SIZE_LIMIT : usize = 10;
+
 impl PoolMarket {
 
     pub fn new() -> Self {
 
         PoolMarket{
 
-            fund_pools : Vec::new(),
+            fund_pools : Vec::with_capacity(POOL_MARKET_SIZE_LIMIT),
 
             pool_size : 0,
         }
@@ -30,8 +32,6 @@ impl PoolMarket {
 }
 
 
-
-const POOL_MARKET_SIZE_LIMIT : usize = 256;
 
 impl PoolMarket {
 
@@ -88,9 +88,23 @@ impl Pack for PoolMarket {
 
         let output = array_mut_ref![dst, 0, L];
 
+        let (pk_as_data_flat, pools_size) = mut_array_refs![output, (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT), 2 ];
 
 
-        msg!("will implement later:: {}, {:?}", L, output);
+        let mut offset = 0;
+
+        for pk in &self.fund_pools {
+
+            let pk_flat = array_mut_ref![pk_as_data_flat, offset, PUBKEY_BYTES];
+
+            let (pack_pk, _) = mut_array_refs![pk_flat, PUBKEY_BYTES, 0];
+
+            pack_pk.copy_from_slice(pk.as_ref());
+
+            offset += PUBKEY_BYTES;
+        }
+
+        *pools_size = self.pool_size.to_le_bytes();
        
     }
 
@@ -107,7 +121,7 @@ impl Pack for PoolMarket {
         let mut offset = 0 ;
 
 
-        let mut new_pools =  Vec::with_capacity(pools_len as usize + 1);
+        let mut new_pools =  Vec::with_capacity(pools_len as usize);
 
         for _ in 0..pools_len {
 
