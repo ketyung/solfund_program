@@ -55,6 +55,8 @@ impl PoolInstruction {
 
             &MODULE_FUND_POOL => Self::unpack_fund_pool(rest)?,
 
+            &MODULE_POOL_MARRKET => Self::unpack_pool_market(rest)?,
+
             _ => return Err(PoolError::InvalidModule.into()),
 
         })
@@ -102,9 +104,6 @@ impl PoolInstruction{
 const ACTION_REGISTER_ADDR : u8 = 3;
 
 const ACTION_REMOVE_ADDR : u8 = 4;
-
-//const ACTION_CLEAR : u8 = 44;
-
 
 
 impl PoolInstruction {
