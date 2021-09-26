@@ -10,13 +10,13 @@ use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 #[derive(Clone, Debug, PartialEq)]
 pub struct PoolMarket {
 
-    fund_pools : Vec<Pubkey>,
+    pub pool_size : u16,
 
-    pub pool_size : u16 
+    fund_pools : Vec<Pubkey>,
 
 }
 
-pub const POOL_MARKET_SIZE_LIMIT : usize = 10;
+pub const POOL_MARKET_SIZE_LIMIT : usize = 100;
 
 impl PoolMarket {
 
@@ -24,9 +24,10 @@ impl PoolMarket {
 
         PoolMarket{
 
-            fund_pools : Vec::with_capacity(POOL_MARKET_SIZE_LIMIT),
-
             pool_size : 0,
+            
+            fund_pools : Vec::with_capacity(POOL_MARKET_SIZE_LIMIT),
+            
         }
     }
 }
@@ -80,16 +81,18 @@ impl Sealed for PoolMarket{}
 
 impl Pack for PoolMarket {
 
-    const LEN: usize = (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + 2;
+    const LEN: usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ;
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
 
-        const L : usize = (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + 2; 
+        const L : usize =  2+ (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT); 
 
         let output = array_mut_ref![dst, 0, L];
 
-        let (pk_as_data_flat, pools_size) = mut_array_refs![output, (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT), 2 ];
+        let (pools_size, pk_as_data_flat) = mut_array_refs![output, 2, (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ];
 
+
+        *pools_size = self.pool_size.to_le_bytes();
 
         let mut offset = 0;
 
@@ -104,22 +107,20 @@ impl Pack for PoolMarket {
             offset += PUBKEY_BYTES;
         }
 
-        *pools_size = self.pool_size.to_le_bytes();
        
     }
 
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
 
-        const L : usize = (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + 2; 
+        const L : usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ; 
 
         let input = array_ref![src, 0, L];
         
-        let (pools, pools_len) = array_refs![input,L-2 ,2];
+        let (pools_len, pools) = array_refs![input, 2, L-2 ];
 
         let pools_len = u16::from_le_bytes(*pools_len);
 
         let mut offset = 0 ;
-
 
         let mut new_pools =  Vec::with_capacity(pools_len as usize);
 
@@ -133,9 +134,8 @@ impl Pack for PoolMarket {
         }
 
         Ok(Self{
-
-            fund_pools : new_pools,
             pool_size : pools_len as u16 ,
+            fund_pools : new_pools,
         })
     }
 }

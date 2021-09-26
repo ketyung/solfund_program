@@ -33,6 +33,8 @@ pub enum PoolInstruction {
         address : Pubkey, 
     },
 
+    RemoveAAllAddrsFromPoolMarket,
+
 }
 
 const MODULE_POOL_MARRKET : u8 = 33;
@@ -105,6 +107,7 @@ const ACTION_REGISTER_ADDR : u8 = 3;
 
 const ACTION_REMOVE_ADDR : u8 = 4;
 
+const ACTION_REMOVE_ALL_ADDRS : u8 = 44;
 
 impl PoolInstruction {
 
@@ -126,6 +129,9 @@ impl PoolInstruction {
             &ACTION_REMOVE_ADDR => {
                 Self::RemoveAddrFromPoolMarket{ address : unpack_pub_key(rest) }   
             },
+
+            &ACTION_REMOVE_ALL_ADDRS => Self::RemoveAAllAddrsFromPoolMarket, 
+
             
             _ => return Err(PoolError::InvalidAction.into()),
 

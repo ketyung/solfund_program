@@ -48,8 +48,12 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
         PoolInstruction::RemoveAddrFromPoolMarket{address} => {
 
             remove_addr_from_pool_market(address, program_id, accounts)
-        }
+        },
 
+        PoolInstruction::RemoveAAllAddrsFromPoolMarket => {
+
+            remove_all_addrs_from_pool_market(program_id, accounts)
+        }
 
     }
 
@@ -185,4 +189,25 @@ fn remove_addr_from_pool_market(address : Pubkey, program_id: &Pubkey,accounts: 
 
     Ok(())
 
+}
+
+fn remove_all_addrs_from_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramResult{
+
+    let account_info_iter = &mut accounts.iter();
+
+    let account = next_account_info(account_info_iter)?;
+
+
+    if is_account_program_owner(program_id, account).unwrap() {
+
+        // when deleting set all its data to zeros
+
+        let zeros = &vec![0; account.data_len()];
+
+        account.data.borrow_mut()[0..zeros.len()].copy_from_slice(zeros);
+
+
+    }
+
+    Ok(())
 }
