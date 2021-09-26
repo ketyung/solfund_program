@@ -120,6 +120,8 @@ fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramR
     if is_account_program_owner(program_id, account).unwrap() {
 
         let pool_market = PoolMarket::new();
+        
+        msg!("Creating pool_market::{:?}", pool_market);
 
         PoolMarket::pack(pool_market, &mut account.data.borrow_mut())?;
 
@@ -138,6 +140,9 @@ fn register_addr_to_pool_market(address : Pubkey, program_id: &Pubkey,accounts: 
     if is_account_program_owner(program_id, account).unwrap() {
 
         let mut pool_market = PoolMarket::unpack_unchecked(&account.data.borrow())?;
+
+
+        msg!("Unpack poolmaket::{:?}", pool_market);
 
         pool_market.add_fund_pool(address);
 
