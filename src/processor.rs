@@ -119,12 +119,24 @@ fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramR
 
     if is_account_program_owner(program_id, account).unwrap() {
 
-        let pool_market = PoolMarket::new();
+        let stored_pool_market = PoolMarket::unpack_unchecked(&account.data.borrow())?;
+
+        if stored_pool_market.pool_size > 0 {
+
+            msg!("PoolMarket already exists ::{:?}",stored_pool_market);
+
+        }
+        else {
+
+            let pool_market = PoolMarket::new();
         
-        msg!("Creating pool_market::{:?}", pool_market);
+            msg!("Creating pool_market::{:?}", pool_market);
+    
+            PoolMarket::pack(pool_market, &mut account.data.borrow_mut())?;
+    
+        }
 
-        PoolMarket::pack(pool_market, &mut account.data.borrow_mut())?;
-
+ 
     }
 
     Ok(())

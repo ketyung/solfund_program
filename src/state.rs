@@ -12,7 +12,7 @@ pub struct PoolMarket {
 
     fund_pools : Vec<Pubkey>,
 
-    pool_size : u16 
+    pub pool_size : u16 
 
 }
 
