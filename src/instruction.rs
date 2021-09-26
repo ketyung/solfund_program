@@ -1,10 +1,11 @@
 use crate::{error::PoolError};
-use crate::state::{FundPool};
+use crate::state::{FundPool}; //, PoolMarket};
 
 use solana_program::{
     program_error::ProgramError,
     msg, 
     program_pack::{Pack},
+    pubkey::{Pubkey},
 };
 
 #[derive(Clone, Debug, PartialEq)]
@@ -20,10 +21,24 @@ pub enum PoolInstruction {
         wallet : FundPool,
     },
 
+    CreatePoolMarket,
+
+    RegisterAddrInPoolMarket {
+
+        address : Pubkey, 
+    },
+
+    RemoveAddrFromPoolMarket {
+
+        address : Pubkey, 
+    },
+
 }
 
+const MODULE_POOL_MARRKET : u8 = 33;
 
-const MODULE_POOL_WALLET : u8 = 1;
+
+const MODULE_FUND_POOL : u8 = 1;
 
 
 impl PoolInstruction {
@@ -38,7 +53,7 @@ impl PoolInstruction {
 
         Ok(match module {
 
-            &MODULE_POOL_WALLET => Self::unpack_pool_wallet(rest)?,
+            &MODULE_FUND_POOL => Self::unpack_fund_pool(rest)?,
 
             _ => return Err(PoolError::InvalidModule.into()),
 
@@ -55,7 +70,7 @@ const ACTION_UPDATE : u8  = 2;
 
 impl PoolInstruction{
 
-    fn unpack_pool_wallet(input : &[u8])-> Result<Self, ProgramError>{
+    fn unpack_fund_pool(input : &[u8])-> Result<Self, ProgramError>{
 
         let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
 
@@ -84,3 +99,46 @@ impl PoolInstruction{
     }
 }
 
+const ACTION_REGISTER_ADDR : u8 = 3;
+
+const ACTION_REMOVE_ADDR : u8 = 4;
+
+//const ACTION_CLEAR : u8 = 44;
+
+
+
+impl PoolInstruction {
+
+
+    fn unpack_pool_market(input : &[u8])-> Result<Self, ProgramError>{
+
+        let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
+        
+        msg!("PoolMarket's action is {}",action);
+      
+        Ok(match action  {
+
+            &ACTION_CREATE => Self::CreatePoolMarket,
+
+            &ACTION_REGISTER_ADDR => {
+                Self::RegisterAddrInPoolMarket{ address : unpack_pub_key(rest) }   
+            },
+
+            &ACTION_REMOVE_ADDR => {
+                Self::RemoveAddrFromPoolMarket{ address : unpack_pub_key(rest) }   
+            },
+            
+            _ => return Err(PoolError::InvalidAction.into()),
+
+        })
+
+    }
+}
+
+
+fn unpack_pub_key(array : &[u8]) -> Pubkey{
+
+    let mut a : [u8; 32] = [1; 32];
+    a.copy_from_slice(array);
+    return Pubkey::new_from_array(a);
+}
