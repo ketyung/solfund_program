@@ -416,18 +416,6 @@ impl FundPool {
         self.investors.len() 
     }
 
-    /*
-    pub fn remove_investor(&mut self, investor : FundPoolInvestor) {
-
-
-        let idx = self.investors.iter().position(|&r| r == investor);
-        if idx.is_some() {
-
-            self.investors.remove(idx.unwrap());
-        
-        }
-    }*/
-
 }
 
 
@@ -463,16 +451,7 @@ impl FundPool {
         self.withdrawers.len() 
     }
 
-    /*
-    pub fn remove_withdrawer(&mut self, withdrawer : FundPoolInvestor) {
-
-        let idx = self.withdrawers.iter().position(|&r| r == withdrawer );
-        if idx.is_some() {
-
-            self.withdrawers.remove(idx.unwrap());        
-        }
-    }*/
-
+ 
 }
 
 
