@@ -26,13 +26,13 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{wallet} => {
+        PoolInstruction::CreateFundPool{manager, lamports, token_count, is_finalized} => {
 
-            create_fund_pool(wallet, program_id, accounts)
+            create_fund_pool(manager, lamports, token_count, is_finalized, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{wallet} => {
-            update_fund_pool(wallet, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{pool} => {
+            update_fund_pool(pool, program_id, accounts) 
         },
 
         PoolInstruction::CreatePoolMarket => {
@@ -76,7 +76,9 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 }
 
 
-fn create_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+fn create_fund_pool(  manager : Pubkey, lamports : u64,
+token_count : u64, is_finalized : bool,
+program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
@@ -85,11 +87,16 @@ fn create_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo
 
     if is_account_program_owner(program_id, account).unwrap() {
 
-        msg!("Proceed!");   
+        
+        let mut w = FundPool::new(true);
+        w.is_finalized = is_finalized;
+        w.token_count = token_count;
+        w.lamports = lamports;
+        w.manager = manager;
 
-        let mut w = pool;
-        w.is_initialized = true ;
         FundPool::pack(w, &mut account.data.borrow_mut())?;
+
+        msg!("Created fund pool {:?}", w);   
 
     }
     Ok(())

@@ -480,7 +480,7 @@ fn pack_bool(boolean: bool, dst: &mut [u8; 1]) {
     *dst = (boolean as u8).to_le_bytes()
 }
 
-fn unpack_bool(src: &[u8; 1]) -> Result<bool, ProgramError> {
+pub fn unpack_bool(src: &[u8; 1]) -> Result<bool, ProgramError> {
     let b = u8::from_le_bytes(*src);
     match  b {
         0 => Ok(false),

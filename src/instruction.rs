@@ -1,24 +1,34 @@
 use crate::{error::PoolError};
-use crate::state::{FundPool}; //, PoolMarket};
+use crate::state::{FundPool,unpack_bool}; //, PoolMarket};
 
 use solana_program::{
     program_error::ProgramError,
     msg, 
     program_pack::{Pack},
-    pubkey::{Pubkey},
+    pubkey::{Pubkey, PUBKEY_BYTES},
 };
+use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
+
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum PoolInstruction {
 
     CreateFundPool {
 
-        wallet : FundPool, 
+        manager : Pubkey,
+
+        lamports : u64,
+
+        token_count : u64, 
+
+        is_finalized : bool,
+
     },
 
     UpdateFundPool {
 
-        wallet : FundPool,
+        pool : FundPool,
     },
 
     CreatePoolMarket,
@@ -86,7 +96,21 @@ impl PoolInstruction{
 
                 let w = FundPool::unpack(rest).unwrap();
 
-                Self::CreateFundPool{ wallet : w}
+                const L : usize = 49; 
+
+                let output = array_mut_ref![rest, 0, L];
+
+                let (manager,lamports, token_count,is_finalized ) = 
+                mut_array_refs![output, PUBKEY_BYTES, 8,8,1 ];
+        
+                Self::CreateFundPool{
+
+                    manager : Pubkey::new_from_array(*manager),
+                    lamports : u64::from_le_bytes(*lamports),
+                    token_count : u64::from_le_bytes(*token_count),
+                    is_finalized : unpack_bool(is_finalized).unwrap(),
+                    
+                }
 
             },
 
@@ -94,7 +118,7 @@ impl PoolInstruction{
 
                 let w = FundPool::unpack(rest).unwrap();
 
-                Self::UpdateFundPool{ wallet : w}
+                Self::UpdateFundPool{ pool : w}
    
             }
             _ => return Err(PoolError::InvalidAction.into()),
