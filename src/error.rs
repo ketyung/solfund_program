@@ -21,8 +21,8 @@ pub enum PoolError {
     #[error("Max investor limit is reached")]
     MaxInvestorReached,
 
-    #[error("Fund pool already created")]
-    FundPoolAlreadyCreated,
+    #[error("Object already created")]
+    ObjectAlreadyCreated,
 
 
 }

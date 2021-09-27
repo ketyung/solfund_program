@@ -77,6 +77,7 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 
 }
 
+
 fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError> {
 
     let stored_fund_pool = FundPool::unpack_unchecked(&fund_pool_account.data.borrow());
@@ -88,7 +89,7 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
             if s.is_initialized {
 
                 msg!("Fund pool already created!!");
-                return Err(PoolError::FundPoolAlreadyCreated);
+                return Err(PoolError::ObjectAlreadyCreated);
             }
         
         },
@@ -97,7 +98,6 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
     }
     
-
     return Ok(false) ;
 }
 
@@ -149,6 +149,31 @@ fn update_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo
 }
 
 
+fn pool_market_exists(account : &AccountInfo) -> Result<bool, PoolError> {
+
+    let stored_pool_market = PoolMarket::unpack_unchecked(&account.data.borrow());
+
+        
+    match stored_pool_market{
+
+        Ok(s) => {
+
+            if s.pool_size > 0 {
+
+                msg!("Pool market already created!!");
+                return Err(PoolError::ObjectAlreadyCreated);
+            }
+        
+        },
+
+        Err(_) => return Ok(false)
+
+    }
+    
+    return Ok(false) ;
+}
+
+
 fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramResult{
 
     let account_info_iter = &mut accounts.iter();
@@ -157,14 +182,8 @@ fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramR
 
     if is_account_program_owner(program_id, account).unwrap() {
 
-        let stored_pool_market = PoolMarket::unpack_unchecked(&account.data.borrow())?;
-
-        if stored_pool_market.pool_size > 0 {
-
-            msg!("PoolMarket already exists ::{:?}",stored_pool_market);
-
-        }
-        else {
+        
+        if !pool_market_exists(account).unwrap(){
 
             let pool_market = PoolMarket::new();
         
