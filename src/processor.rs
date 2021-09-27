@@ -79,14 +79,24 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 
 fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError> {
 
+    let stored_fund_pool = FundPool::unpack_unchecked(&fund_pool_account.data.borrow());
 
-    let stored_fund_pool = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
+    match stored_fund_pool{
 
-    if stored_fund_pool.is_initialized {
+        Ok(s) => {
 
-        msg!("Fund pool already created!!");
-        return Err(PoolError::FundPoolAlreadyCreated);
+            if s.is_initialized {
+
+                msg!("Fund pool already created!!");
+                return Err(PoolError::FundPoolAlreadyCreated);
+            }
+        
+        },
+
+        Err(_) => return Ok(false)
+
     }
+    
 
     return Ok(false) ;
 }
