@@ -14,6 +14,8 @@ use {
     
     crate::instruction::PoolInstruction, 
     crate::state::{FundPool,PoolMarket},
+    crate::{error::PoolError},
+
 };
 
 
@@ -75,29 +77,45 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 
 }
 
+fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError> {
 
-fn create_fund_pool(  manager : Pubkey, lamports : u64,
-token_count : u64, is_finalized : bool,
+
+    let stored_fund_pool = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
+
+    if stored_fund_pool.is_initialized {
+
+        msg!("Fund pool already created!!");
+        return Err(PoolError::FundPoolAlreadyCreated);
+    }
+
+    return Ok(false) ;
+}
+
+
+fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
 program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
 
-    let account = next_account_info(account_info_iter)?;
+    let fund_pool_account = next_account_info(account_info_iter)?;
 
-    if is_account_program_owner(program_id, account).unwrap() {
+    if is_account_program_owner(program_id, fund_pool_account).unwrap() {
 
-        
-        let mut w = FundPool::new(true);
-        w.is_finalized = is_finalized;
-        w.token_count = token_count;
-        w.lamports = lamports;
-        w.manager = manager;
+        if !fund_pool_exists(fund_pool_account).unwrap() {
 
-        FundPool::pack(w, &mut account.data.borrow_mut())?;
-
-        msg!("Created fund pool {:?}", w);   
-
+            let mut w = FundPool::new(true);
+            w.is_finalized = is_finalized;
+            w.token_count = token_count;
+            w.lamports = lamports;
+            w.manager = manager;
+    
+            FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
+    
+            msg!("Created fund pool {:?}", w);   
+    
+        }
+    
     }
     Ok(())
 }

@@ -21,6 +21,10 @@ pub enum PoolError {
     #[error("Max investor limit is reached")]
     MaxInvestorReached,
 
+    #[error("Fund pool already created")]
+    FundPoolAlreadyCreated,
+
+
 }
 
 impl From<PoolError> for ProgramError {

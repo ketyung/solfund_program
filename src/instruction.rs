@@ -7,7 +7,7 @@ use solana_program::{
     program_pack::{Pack},
     pubkey::{Pubkey, PUBKEY_BYTES},
 };
-use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
+use arrayref::{array_mut_ref,  mut_array_refs};
 
 
 
