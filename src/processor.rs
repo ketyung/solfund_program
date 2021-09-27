@@ -28,9 +28,9 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{manager, lamports, token_count, is_finalized} => {
+        PoolInstruction::CreateFundPool{manager, lamports, token_count, is_finalized, icon} => {
 
-            create_fund_pool(manager, lamports, token_count, is_finalized, program_id, accounts)
+            create_fund_pool(manager, lamports, token_count, is_finalized, icon, program_id, accounts)
         },
 
         PoolInstruction::UpdateFundPool{pool} => {
@@ -103,7 +103,7 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
 
 fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
-program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+    icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
@@ -119,6 +119,7 @@ program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
             w.token_count = token_count;
             w.lamports = lamports;
             w.manager = manager;
+            w.icon = icon ; 
     
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
     

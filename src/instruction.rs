@@ -24,6 +24,8 @@ pub enum PoolInstruction {
 
         is_finalized : bool,
 
+        icon : u16, 
+
     },
 
     UpdateFundPool {
@@ -98,8 +100,8 @@ impl PoolInstruction{
 
                 let output = array_ref![rest, 0, L];
 
-                let (manager,lamports, token_count,is_finalized ) = 
-                array_refs![output, PUBKEY_BYTES, 8,8,1 ];
+                let (manager,lamports, token_count,is_finalized, icon ) = 
+                array_refs![output, PUBKEY_BYTES, 8,8,1, 2 ];
         
                 Self::CreateFundPool{
 
@@ -107,6 +109,7 @@ impl PoolInstruction{
                     lamports : u64::from_le_bytes(*lamports),
                     token_count : u64::from_le_bytes(*token_count),
                     is_finalized : unpack_bool(is_finalized).unwrap(),
+                    icon : u16::from_le_bytes(*icon),
                     
                 }
 
