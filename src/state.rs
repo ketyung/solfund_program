@@ -2,7 +2,8 @@ use solana_program::{
     pubkey::{Pubkey, PUBKEY_BYTES},
     program_error::ProgramError,
     program_pack::{IsInitialized,Pack,Sealed},
-    clock::UnixTimestamp,
+    clock::{Clock,UnixTimestamp},
+    sysvar::Sysvar, 
     msg, 
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -397,6 +398,9 @@ impl FundPool {
         if self.investors.len() < FUND_POOL_INVESTOR_LIMIT  {
 
             if !self.investors.contains(&investor){
+
+                investor.date = Clock::get().unwrap().unix_timestamp;
+                msg!("Current date time:: {}", investor.date);
 
                 self.investors.push(investor);
                 return Ok(true);
