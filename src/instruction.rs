@@ -96,7 +96,7 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                const L : usize = 49; 
+                const L : usize = 51; 
 
                 let output = array_ref![rest, 0, L];
 
