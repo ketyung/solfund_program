@@ -434,6 +434,46 @@ impl FundPool {
 }
 
 
+impl FundPool {
+
+    pub fn register_withdrawer(&mut self, withdrawer : FundPoolInvestor) -> bool  {
+
+        if self.withdrawers.len() < FUND_POOL_WITHDRAWER_LIMIT  {
+
+            if !self.withdrawers.contains(&withdrawer){
+
+                withdrawer.date = Clock::get().unwrap().unix_timestamp;
+                msg!("Current date time:: {}", withdrawer.date);
+
+                self.withdrawers.push(withdrawer);
+
+                return true; 
+                
+            }
+
+        }
+
+        return false; 
+       
+    }
+
+
+    pub fn withdrawer_count(&self) -> usize {
+
+        self.withdrawers.len() 
+    }
+
+    pub fn remove_withdrawer(&mut self, withdrawer : FundPoolInvestor) {
+
+        let idx = self.withdrawers.iter().position(|&r| r == withdrawer );
+        if idx.is_some() {
+
+            self.withdrawers.remove(idx.unwrap());        
+        }
+    }
+
+}
+
 
 
 fn pack_bool(boolean: bool, dst: &mut [u8; 1]) {
