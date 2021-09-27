@@ -211,16 +211,9 @@ impl Pack for FundPool {
 
         let output = array_mut_ref![dst, 0, POOL_WALLET_LENGTH];
        
-        let (
-        is_initialized,
-        manager, 
-        address, 
-        lamports, 
-        token_count,
-        is_finalized,
-        iv_data_flat,
-        wd_data_flat,
-        ) = mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,
+        let (is_initialized,manager, address, lamports, 
+        token_count,is_finalized,iv_data_flat,wd_data_flat) = 
+        mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,
         8, 8,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
         FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT];
 
@@ -234,7 +227,7 @@ impl Pack for FundPool {
        
         let mut offset = 0 ;
 
-        for iv in self.investors {
+        for iv in &self.investors {
 
             let iv_flat = array_mut_ref![iv_data_flat, offset, FUND_POOL_INVESTOR_LEN];
 
@@ -255,7 +248,7 @@ impl Pack for FundPool {
         }
 
 
-        for wd in self.withdrawers {
+        for wd in &self.withdrawers {
 
             let wd_flat = array_mut_ref![wd_data_flat, offset, FUND_POOL_INVESTOR_LEN];
 
@@ -277,16 +270,7 @@ impl Pack for FundPool {
        
         let input = array_ref![src, 0, POOL_WALLET_LENGTH];
        
-        let (
-        is_initialized,
-        manager, 
-        address, 
-        lamports, 
-        token_count,
-        is_finalized,
-        invs_flat,
-        wds_flat,
-        ) =
+        let (is_initialized,manager, address, lamports, token_count,is_finalized, invs_flat,wds_flat) =
 
         array_refs![input, 
         1, PUBKEY_BYTES, PUBKEY_BYTES, 
@@ -310,7 +294,6 @@ impl Pack for FundPool {
 
             let iv_flat = array_ref![invs_flat, offset, FUND_POOL_INVESTOR_LEN];
 
-            #[allow(clippy::ptr_offset_with_cast)]
             let (address,investor,amount, date) = array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
             invs.push(
@@ -330,7 +313,7 @@ impl Pack for FundPool {
 
         let wds_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT;
         let mut wds =  Vec::with_capacity(wds_len);
-
+     
         for _ in 0..wds_len {
 
             let wd_flat = array_ref![wds_flat, offset, FUND_POOL_INVESTOR_LEN];
@@ -363,7 +346,6 @@ impl Pack for FundPool {
             is_finalized : is_final,
             investors : invs,
             withdrawers : wds, 
-            
         })
        
     }
@@ -404,10 +386,12 @@ impl FundPool {
 
             if !self.investors.contains(&investor){
 
-                investor.date = Clock::get().unwrap().unix_timestamp;
-                msg!("Current date time:: {}", investor.date);
+                let mut inv = investor;
 
-                self.investors.push(investor);
+                inv.date = Clock::get().unwrap().unix_timestamp;
+                msg!("Current date time:: {}", inv.date);
+
+                self.investors.push(inv);
                 return Ok(true);
             }
 
@@ -425,6 +409,7 @@ impl FundPool {
         self.investors.len() 
     }
 
+    /*
     pub fn remove_investor(&mut self, investor : FundPoolInvestor) {
 
 
@@ -434,7 +419,7 @@ impl FundPool {
             self.investors.remove(idx.unwrap());
         
         }
-    }
+    }*/
 
 }
 
@@ -447,10 +432,13 @@ impl FundPool {
 
             if !self.withdrawers.contains(&withdrawer){
 
-                withdrawer.date = Clock::get().unwrap().unix_timestamp;
-                msg!("Current date time:: {}", withdrawer.date);
 
-                self.withdrawers.push(withdrawer);
+                let mut wd = withdrawer;
+
+                wd.date = Clock::get().unwrap().unix_timestamp;
+                msg!("Current date time:: {}", wd.date);
+
+                self.withdrawers.push(wd);
 
                 return true; 
                 
@@ -468,6 +456,7 @@ impl FundPool {
         self.withdrawers.len() 
     }
 
+    /*
     pub fn remove_withdrawer(&mut self, withdrawer : FundPoolInvestor) {
 
         let idx = self.withdrawers.iter().position(|&r| r == withdrawer );
@@ -475,7 +464,7 @@ impl FundPool {
 
             self.withdrawers.remove(idx.unwrap());        
         }
-    }
+    }*/
 
 }
 

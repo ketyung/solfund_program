@@ -7,7 +7,7 @@ use solana_program::{
     program_pack::{Pack},
     pubkey::{Pubkey, PUBKEY_BYTES},
 };
-use arrayref::{array_mut_ref,  mut_array_refs};
+use arrayref::{array_ref,  array_refs};
 
 
 
@@ -94,14 +94,12 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                let w = FundPool::unpack(rest).unwrap();
-
                 const L : usize = 49; 
 
-                let output = array_mut_ref![rest, 0, L];
+                let output = array_ref![rest, 0, L];
 
                 let (manager,lamports, token_count,is_finalized ) = 
-                mut_array_refs![output, PUBKEY_BYTES, 8,8,1 ];
+                array_refs![output, PUBKEY_BYTES, 8,8,1 ];
         
                 Self::CreateFundPool{
 

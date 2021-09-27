@@ -122,7 +122,7 @@ program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
     
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
     
-            msg!("Created fund pool {:?}", w);   
+           // msg!("Created fund pool {:?}", w);   
     
         }
     
