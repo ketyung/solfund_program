@@ -6,6 +6,7 @@ use solana_program::{
     msg, 
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
+use crate::{error::PoolError};
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -142,7 +143,7 @@ impl Pack for PoolMarket {
 }
 
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct FundPoolInvestor {
 
     pub investor : Pubkey,
@@ -153,6 +154,14 @@ pub struct FundPoolInvestor {
 
     pub date : UnixTimestamp, 
 }
+
+
+impl PartialEq for FundPoolInvestor {
+    fn eq(&self, other: &Self) -> bool {
+        self.address == other.address
+    }
+}
+
 
 const FUND_POOL_INVESTOR_LEN : usize = 80; 
 
@@ -361,6 +370,7 @@ impl IsInitialized for FundPool {
     }
 }
 
+
 impl FundPool {
 
     pub fn new(is_initialized : bool) -> Self {
@@ -382,16 +392,22 @@ impl FundPool {
 
 impl FundPool {
 
-    pub fn register_investor(&mut self, investor : FundPoolInvestor) {
+    pub fn register_investor(&mut self, investor : FundPoolInvestor) -> Result<bool, PoolError> {
 
         if self.investors.len() < FUND_POOL_INVESTOR_LIMIT  {
 
             if !self.investors.contains(&investor){
 
                 self.investors.push(investor);
-
+                return Ok(true);
             }
+
+            return Err(PoolError::InvestorAlreadyExists);
+       
         }
+
+        Err(PoolError::MaxInvestorReached)
+       
     }
 
 
@@ -400,7 +416,17 @@ impl FundPool {
         self.investors.len() 
     }
 
-    
+    pub fn remove_investor(&mut self, investor : FundPoolInvestor) {
+
+
+        let idx = self.investors.iter().position(|&r| r == investor);
+        if idx.is_some() {
+
+            self.investors.remove(idx.unwrap());
+        
+        }
+    }
+
 }
 
 
@@ -416,7 +442,6 @@ fn unpack_bool(src: &[u8; 1]) -> Result<bool, ProgramError> {
         0 => Ok(false),
         1 => Ok(true),
         _ => {
-            msg!("Boolean cannot be unpacked");
             Err(ProgramError::InvalidAccountData)
         }
     }

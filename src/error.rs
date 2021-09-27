@@ -15,6 +15,12 @@ pub enum PoolError {
     #[error("Invalid action")]
     InvalidAction,
 
+    #[error("Investor already exists")]
+    InvestorAlreadyExists,
+
+    #[error("Max investor limit is reached")]
+    MaxInvestorReached,
+
 }
 
 impl From<PoolError> for ProgramError {
