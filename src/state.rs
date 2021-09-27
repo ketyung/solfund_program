@@ -277,7 +277,6 @@ impl Pack for FundPool {
        
         let input = array_ref![src, 0, POOL_WALLET_LENGTH];
        
-
         let (
         is_initialized,
         manager, 
@@ -309,19 +308,21 @@ impl Pack for FundPool {
 
         for _ in 0..invs_len {
 
-            let iv = array_ref![invs_flat, offset, FUND_POOL_INVESTOR_LEN];
+            let iv_flat = array_ref![invs_flat, offset, FUND_POOL_INVESTOR_LEN];
 
+            #[allow(clippy::ptr_offset_with_cast)]
+            let (address,investor,amount, date) = array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
-            let (address,investor,amount, date) = mut_array_refs![iv, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+            invs.push(
 
-            let ivv = FundPoolInvestor{ 
-                investor : Pubkey::new_from_array(*investor), 
-                address :Pubkey::new_from_array(*address), 
-                amount : u64::from_le_bytes(*amount), 
-                date : i64::from_le_bytes(*date), 
-            };
+                FundPoolInvestor{ 
+                    investor : Pubkey::new_from_array(*investor), 
+                    address :Pubkey::new_from_array(*address), 
+                    amount : u64::from_le_bytes(*amount), 
+                    date : i64::from_le_bytes(*date), 
+                }
 
-            invs.push(ivv);
+            );
 
             offset += FUND_POOL_INVESTOR_LEN;
         }
@@ -332,18 +333,22 @@ impl Pack for FundPool {
 
         for _ in 0..wds_len {
 
-            let iv = array_ref![wds_flat, offset, FUND_POOL_INVESTOR_LEN];
+            let wd_flat = array_ref![wds_flat, offset, FUND_POOL_INVESTOR_LEN];
 
-            let (address,investor,amount, date) = mut_array_refs![iv, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+            #[allow(clippy::ptr_offset_with_cast)]
+            let (add,inv,amt, dt) = array_refs![wd_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
-            let wdd = FundPoolInvestor{ 
-                investor : Pubkey::new_from_array(*investor), 
-                address :Pubkey::new_from_array(*address), 
-                amount : u64::from_le_bytes(*amount), 
-                date : i64::from_le_bytes(*date), 
-            };
+            
+            wds.push(
 
-            wds.push(wdd);
+                FundPoolInvestor{ 
+                    investor : Pubkey::new_from_array(*inv), 
+                    address :Pubkey::new_from_array(*add), 
+                    amount : u64::from_le_bytes(*amt), 
+                    date : i64::from_le_bytes(*dt), 
+                }
+
+            );
 
             offset += FUND_POOL_INVESTOR_LEN;
         }
