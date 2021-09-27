@@ -2,6 +2,7 @@ use solana_program::{
     pubkey::{Pubkey, PUBKEY_BYTES},
     program_error::ProgramError,
     program_pack::{IsInitialized,Pack,Sealed},
+    clock::UnixTimestamp,
     msg, 
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
@@ -141,6 +142,24 @@ impl Pack for PoolMarket {
 }
 
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct FundPoolInvestor {
+
+    pub investor : Pubkey,
+
+    pub address : Pubkey,
+   
+    pub amount : u64, 
+
+    pub date : UnixTimestamp, 
+}
+
+const FUND_POOL_INVESTOR_LEN : usize = 80; 
+
+
+pub const FUND_POOL_INVESTOR_LIMIT : usize = 100;
+
+pub const FUND_POOL_WITHDRAWER_LIMIT : usize = 100;
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -149,19 +168,30 @@ pub struct FundPool {
     pub is_initialized: bool,
 
     pub manager : Pubkey, 
-   // pub token_account : Pubkey, 
+   
+    pub address : Pubkey, 
+
+    pub lamports : u64,
 
     pub token_count : u64,
 
-    pub max_investor_count : u16, 
-
+    pub is_finalized : bool,
+       
+    pub investors : Vec<FundPoolInvestor>,
+    
+    pub withdrawers : Vec<FundPoolInvestor>,
+    
 }
 
 
 impl Sealed for FundPool {}
 
 
-const POOL_WALLET_LENGTH : usize = 43 ; // 1 + 32 + 8 + 2
+// 1 + 32 + 32 + 64 + 64 + 1 + ((32 + 32 + 8) * FUND_POOL_INVESTOR_LIMIT)
+// (32 + 32 + 8 + 8) * + FUND_POOL_WITHDRAWER_LIMIT
+// 194 + 
+const POOL_WALLET_LENGTH : usize = 194 + 
+(80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT) ; 
 
 impl Pack for FundPool {
 
@@ -174,17 +204,62 @@ impl Pack for FundPool {
         let (
         is_initialized,
         manager, 
+        address, 
+        lamports, 
         token_count,
-        max_investor_count,
-        ) = mut_array_refs![ output,1,PUBKEY_BYTES,8,2];
+        is_finalized,
+        iv_data_flat,
+        wd_data_flat,
+        ) = mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,
+        8, 8,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
+        FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT];
 
     
         pack_bool(self.is_initialized, is_initialized);
-
         manager.copy_from_slice(self.manager.as_ref());
-        //token_count.copy_from_slice(self.token_count);
+        address.copy_from_slice(self.address.as_ref());
+        *lamports = self.lamports.to_le_bytes();
         *token_count = self.token_count.to_le_bytes();
-        *max_investor_count = self.max_investor_count.to_le_bytes();
+        pack_bool(self.is_finalized, is_finalized);
+       
+        let mut offset = 0 ;
+
+        for iv in self.investors {
+
+            let iv_flat = array_mut_ref![iv_data_flat, offset, FUND_POOL_INVESTOR_LEN];
+
+            let (address,
+                investor, 
+                amount, 
+                date) = 
+                mut_array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES, 8, 8];
+
+            address.copy_from_slice(iv.address.as_ref());
+            investor.copy_from_slice(iv.investor.as_ref());
+            *date = iv.date.to_le_bytes();
+            *amount = iv.amount.to_le_bytes();
+            
+
+            offset += FUND_POOL_INVESTOR_LEN;
+
+        }
+
+
+        for wd in self.withdrawers {
+
+            let wd_flat = array_mut_ref![wd_data_flat, offset, FUND_POOL_INVESTOR_LEN];
+
+            let (address,investor,amount, date) = mut_array_refs![wd_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+
+            address.copy_from_slice(wd.address.as_ref());
+            investor.copy_from_slice(wd.investor.as_ref());
+            *date = wd.date.to_le_bytes();
+            *amount = wd.amount.to_le_bytes();
+          
+            offset += FUND_POOL_INVESTOR_LEN;
+
+        }
+
 
     }
 
@@ -192,16 +267,87 @@ impl Pack for FundPool {
        
         let input = array_ref![src, 0, POOL_WALLET_LENGTH];
        
-        let (is_initialized, manager, token_count, max_investor_count) = array_refs![input, 
-        1, PUBKEY_BYTES, 8, 2];
+
+        let (
+        is_initialized,
+        manager, 
+        address, 
+        lamports, 
+        token_count,
+        is_finalized,
+        ivs,
+        wds,
+        ) =
+
+        array_refs![input, 
+        1, PUBKEY_BYTES, PUBKEY_BYTES, 
+        8, 8, 1, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
+        (FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT)];
 
         let is_init = unpack_bool(is_initialized).unwrap();
+        let is_final = unpack_bool(is_finalized).unwrap();
+        let mgr = Pubkey::new_from_array(*manager);
+        let addr = Pubkey::new_from_array(*address);
+        let lp = u64::from_le_bytes(*lamports);
+        let tkc = u64::from_le_bytes(*token_count);
+
+        
+        let invs_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT;
+        let mut invs =  Vec::with_capacity(invs_len);
+
+        let mut offset = 0 ;
+
+        for _ in 0..invs_len {
+
+            let iv = array_ref![invs, offset, FUND_POOL_INVESTOR_LEN];
+
+
+            let (address,investor,amount, date) = mut_array_refs![iv, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+
+            let ivv = FundPoolInvestor{ 
+                investor : Pubkey::new_from_array(*investor), 
+                address :Pubkey::new_from_array(*address), 
+                amount : u64::from_le_bytes(*amount), 
+                date : i64::from_le_bytes(*date), 
+            };
+
+            invs.push(ivv);
+
+            offset += FUND_POOL_INVESTOR_LEN;
+        }
+
+
+        let wds_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT;
+        let mut wds =  Vec::with_capacity(wds_len);
+
+        for _ in 0..wds_len {
+
+            let iv = array_ref![wds, offset, FUND_POOL_INVESTOR_LEN];
+
+            let (address,investor,amount, date) = mut_array_refs![iv, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+
+            let wdd = FundPoolInvestor{ 
+                investor : Pubkey::new_from_array(*investor), 
+                address :Pubkey::new_from_array(*address), 
+                amount : u64::from_le_bytes(*amount), 
+                date : i64::from_le_bytes(*date), 
+            };
+
+            wds.push(wdd);
+
+            offset += FUND_POOL_INVESTOR_LEN;
+        }
+
 
         Ok (Self {
             is_initialized : is_init, 
             manager : Pubkey::new_from_array(*manager),
+            address : Pubkey::new_from_array(*address),
+            lamports : u64::from_le_bytes(*lamports),
             token_count : u64::from_le_bytes(*token_count),
-            max_investor_count : u16::from_le_bytes(*max_investor_count),
+            is_finalized : is_final,
+            investors : invs,
+            withdrawers : wds, 
             
         })
        
