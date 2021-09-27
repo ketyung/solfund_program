@@ -285,8 +285,8 @@ impl Pack for FundPool {
         lamports, 
         token_count,
         is_finalized,
-        ivs,
-        wds,
+        invs_flat,
+        wds_flat,
         ) =
 
         array_refs![input, 
@@ -309,7 +309,7 @@ impl Pack for FundPool {
 
         for _ in 0..invs_len {
 
-            let iv = array_ref![invs, offset, FUND_POOL_INVESTOR_LEN];
+            let iv = array_ref![invs_flat, offset, FUND_POOL_INVESTOR_LEN];
 
 
             let (address,investor,amount, date) = mut_array_refs![iv, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
@@ -332,7 +332,7 @@ impl Pack for FundPool {
 
         for _ in 0..wds_len {
 
-            let iv = array_ref![wds, offset, FUND_POOL_INVESTOR_LEN];
+            let iv = array_ref![wds_flat, offset, FUND_POOL_INVESTOR_LEN];
 
             let (address,investor,amount, date) = mut_array_refs![iv, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
@@ -351,10 +351,10 @@ impl Pack for FundPool {
 
         Ok (Self {
             is_initialized : is_init, 
-            manager : Pubkey::new_from_array(*manager),
-            address : Pubkey::new_from_array(*address),
-            lamports : u64::from_le_bytes(*lamports),
-            token_count : u64::from_le_bytes(*token_count),
+            manager : mgr,
+            address : addr,
+            lamports : lp,
+            token_count : tkc,
             is_finalized : is_final,
             investors : invs,
             withdrawers : wds, 
