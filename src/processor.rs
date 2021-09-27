@@ -107,8 +107,7 @@ fn update_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[Account
         let mut w = FundPool::unpack_unchecked(&account.data.borrow())?;
 
         w.token_count = wallet.token_count;
-       // w.max_investor_count = wallet.max_investor_count;
-
+     
         FundPool::pack(w, &mut account.data.borrow_mut())?;
     }
     Ok(())
