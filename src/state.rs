@@ -177,9 +177,9 @@ pub struct FundPool {
 
     pub is_finalized : bool,
        
-    pub investors : Vec<FundPoolInvestor>,
+    investors : Vec<FundPoolInvestor>,
     
-    pub withdrawers : Vec<FundPoolInvestor>,
+    withdrawers : Vec<FundPoolInvestor>,
     
 }
 
@@ -360,6 +360,49 @@ impl IsInitialized for FundPool {
         self.is_initialized
     }
 }
+
+impl FundPool {
+
+    pub fn new(is_initialized : bool) -> Self {
+
+        FundPool{
+
+            is_initialized : is_initialized,
+            manager : Pubkey::default(),
+            address : Pubkey::default(),
+            lamports : 0,
+            token_count : 0,
+            is_finalized : false,
+            investors : Vec::with_capacity(FUND_POOL_INVESTOR_LIMIT),
+            withdrawers : Vec::with_capacity(FUND_POOL_WITHDRAWER_LIMIT),
+            
+        }
+    }
+}
+
+impl FundPool {
+
+    pub fn register_investor(&mut self, investor : FundPoolInvestor) {
+
+        if self.investors.len() < FUND_POOL_INVESTOR_LIMIT  {
+
+            if !self.investors.contains(&investor){
+
+                self.investors.push(investor);
+
+            }
+        }
+    }
+
+
+    pub fn investor_count(&self) -> usize {
+
+        self.investors.len() 
+    }
+
+    
+}
+
 
 
 

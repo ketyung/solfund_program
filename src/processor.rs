@@ -28,11 +28,11 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
 
         PoolInstruction::CreateFundPool{wallet} => {
 
-            create_pool_wallet(wallet, program_id, accounts)
+            create_fund_pool(wallet, program_id, accounts)
         },
 
         PoolInstruction::UpdateFundPool{wallet} => {
-            update_pool_wallet(wallet, program_id, accounts) 
+            update_fund_pool(wallet, program_id, accounts) 
         },
 
         PoolInstruction::CreatePoolMarket => {
@@ -76,7 +76,7 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 }
 
 
-fn create_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+fn create_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
@@ -87,7 +87,7 @@ fn create_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[Account
 
         msg!("Proceed!");   
 
-        let mut w = wallet;
+        let mut w = pool;
         w.is_initialized = true ;
         FundPool::pack(w, &mut account.data.borrow_mut())?;
 
@@ -95,7 +95,7 @@ fn create_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[Account
     Ok(())
 }
 
-fn update_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+fn update_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
     let account_info_iter = &mut accounts.iter();
@@ -106,7 +106,7 @@ fn update_pool_wallet(wallet : FundPool, program_id: &Pubkey,accounts: &[Account
 
         let mut w = FundPool::unpack_unchecked(&account.data.borrow())?;
 
-        w.token_count = wallet.token_count;
+        w.token_count = pool.token_count;
      
         FundPool::pack(w, &mut account.data.borrow_mut())?;
     }
