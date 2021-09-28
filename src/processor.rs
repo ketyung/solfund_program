@@ -119,8 +119,13 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
 
     if is_account_program_owner(program_id, fund_pool_account).unwrap() {
 
+        msg!("yes, account is owner, proceed...");
+
+
         if !fund_pool_exists(fund_pool_account).unwrap() {
 
+            msg!("pool not exists yet, proceed...");
+        
             let mut w = FundPool::new(true);
             w.is_finalized = is_finalized;
             w.token_count = token_count;
