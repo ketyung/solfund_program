@@ -141,7 +141,7 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
             let counter_account = next_account_info(account_info_iter)?;
   
             // if counter account is valid and provided, increment the counter
-            if is_account_program_owner(program_id, counter_account).unwrap() {
+            if counter_account.owner != program_id  {
 
                 msg!("Going to increment counter, counter_account:{:?}", counter_account);
                 increment_counter(&counter_account)
