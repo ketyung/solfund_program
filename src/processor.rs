@@ -223,7 +223,8 @@ fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramR
     let account_info_iter = &mut accounts.iter();
 
     let account = next_account_info(account_info_iter)?;
-
+    let counter_account = next_account_info(account_info_iter)?;
+       
     if is_account_program_owner(program_id, account).unwrap() {
 
         
@@ -237,10 +238,10 @@ fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramR
     
         }
 
-        let counter_account = next_account_info(account_info_iter)?;
         // if counter account is valid and provided, increment the counter
         if is_account_program_owner(program_id, counter_account).unwrap() {
 
+            msg!("Going to increment counter, counter_account:{:?}", counter_account);
             increment_counter(&counter_account)
         }
         else {
@@ -339,7 +340,14 @@ fn increment_counter(counter_account : &AccountInfo) {
 
         Err(_) => {
 
-            msg!("Failed to unpack counter")
+            msg!("Failed to unpack counter, create .default !");
+
+            let mut c = Counter::new();
+            c.increment();
+   
+            // Ignore the error  
+            let _ = Counter::pack(c, &mut counter_account.data.borrow_mut());
+
         }
 
     }
