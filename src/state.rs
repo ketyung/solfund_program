@@ -184,7 +184,6 @@ impl ManagerPool {
         if idx.is_some() {
 
             self.addresses.remove(idx.unwrap());
-    
         }
     }
 
