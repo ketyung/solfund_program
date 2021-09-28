@@ -90,7 +90,6 @@ impl PoolInstruction{
 
         let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
 
-        msg!("Wallet's action is {}",action);
         
         Ok(match action  {
 

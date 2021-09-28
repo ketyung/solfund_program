@@ -117,6 +117,10 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
 
     let fund_pool_account = next_account_info(account_info_iter)?;
 
+
+    msg!("create.fund.pool:manager:{:?},lamports:{:?},token_count:{:?},is_f:{:?}, icon:{:?}",
+    manager, lamports,token_count,is_finalized,icon);
+
     if is_account_program_owner(program_id, fund_pool_account).unwrap() {
 
         msg!("yes, account is owner, proceed...");
