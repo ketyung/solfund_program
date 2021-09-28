@@ -243,6 +243,10 @@ fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramR
 
             increment_counter(&counter_account)
         }
+        else {
+
+            msg!("No valid counter account provided");
+        }
 
     }
 
