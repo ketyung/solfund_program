@@ -37,6 +37,11 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
             update_fund_pool(pool, program_id, accounts) 
         },
 
+        PoolInstruction::DeleteFundPool => {
+
+            delete_fund_pool(program_id, accounts)
+            
+        },
         PoolInstruction::CreatePoolMarket => {
 
             create_pool_market(program_id, accounts)
@@ -88,7 +93,6 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
             if s.is_initialized {
 
-                msg!("Fund pool already created!!");
                 return Err(PoolError::ObjectAlreadyCreated);
             }
         
@@ -102,9 +106,7 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
         } 
         
     }
-    
-    msg!("Will create fund pool it doesn't exist yet!!");
-            
+             
     return Ok(false) ;
 }
 
@@ -117,18 +119,15 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
 
     let fund_pool_account = next_account_info(account_info_iter)?;
 
-
     msg!("create.fund.pool:manager:{:?},lamports:{:?},token_count:{:?},is_f:{:?}, icon:{:?}",
     manager, lamports,token_count,is_finalized,icon);
 
+
     if is_account_program_owner(program_id, fund_pool_account).unwrap() {
 
-        msg!("yes, account is owner, proceed...");
-
-
+       
         if !fund_pool_exists(fund_pool_account).unwrap() {
 
-            msg!("pool not exists yet, proceed...");
         
             let mut w = FundPool::new(true);
             w.is_finalized = is_finalized;
@@ -138,8 +137,6 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
             w.icon = icon ; 
     
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
-    
-           // msg!("Created fund pool {:?}", w);   
     
         }
     
@@ -164,6 +161,25 @@ fn update_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo
     }
     Ok(())
 }
+
+fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+
+
+    let account_info_iter = &mut accounts.iter();
+
+    let account = next_account_info(account_info_iter)?;
+
+    if is_account_program_owner(program_id, account).unwrap() {
+
+        let zeros = &vec![0; account.data_len()];
+
+        account.data.borrow_mut()[0..zeros.len()].copy_from_slice(zeros);
+
+    }
+    Ok(())
+}
+
+
 
 
 fn pool_market_exists(account : &AccountInfo) -> Result<bool, PoolError> {

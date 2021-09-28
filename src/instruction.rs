@@ -33,6 +33,9 @@ pub enum PoolInstruction {
         pool : FundPool,
     },
 
+
+    DeleteFundPool ,
+
     CreatePoolMarket,
 
     RegisterAddrInPoolMarket {
@@ -83,6 +86,7 @@ const ACTION_CREATE : u8  = 1;
 
 const ACTION_UPDATE : u8  = 2;
 
+const ACTION_DELETE : u8 = 44;
 
 impl PoolInstruction{
 
@@ -120,7 +124,10 @@ impl PoolInstruction{
 
                 Self::UpdateFundPool{ pool : w}
    
-            }
+            },
+
+            &ACTION_DELETE => Self::DeleteFundPool,
+            
             _ => return Err(PoolError::InvalidAction.into()),
 
         })
