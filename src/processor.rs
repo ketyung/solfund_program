@@ -143,7 +143,6 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
             // if counter account is valid and provided, increment the counter
             if counter_account.owner == program_id  {
 
-                msg!("Going to increment counter, counter_account:{:?}", counter_account);
                 increment_counter(&counter_account)
             }
             else {
@@ -330,10 +329,11 @@ fn increment_counter(counter_account : &AccountInfo) {
 
         Ok(mut c) => {
 
-            msg!("Increment counter!!");
+            msg!("Increment counter!!, curr.count::{}",c.count);
             c.increment();
    
             // Ignore the error  
+
             let _ = Counter::pack(c, &mut counter_account.data.borrow_mut());
 
         },

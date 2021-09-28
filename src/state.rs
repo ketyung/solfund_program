@@ -28,7 +28,11 @@ impl Counter {
 
     pub fn increment(&mut self){
 
-        self.count +=1 ;
+        if self.count < 65535 {
+
+            self.count +=1 ;
+  
+        }
     }
 }
 
