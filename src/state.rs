@@ -201,7 +201,7 @@ impl Sealed for FundPool {}
 
 // 1 + 32 + 32 + 8 + 8 + 1 + ((32 + 32 + 8) * FUND_POOL_INVESTOR_LIMIT)
 // (32 + 32 + 8 + 8) * + FUND_POOL_WITHDRAWER_LIMIT
-// 82 + 
+// 84 + 
 const POOL_WALLET_LENGTH : usize = 84 + 
 (80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT) ; 
 
