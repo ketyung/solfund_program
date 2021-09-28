@@ -8,6 +8,7 @@ use solana_program::{
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use crate::{error::PoolError};
+use std::convert::{TryFrom};
 
 
 #[derive(Clone, Debug, PartialEq)]
@@ -201,9 +202,9 @@ impl Sealed for FundPool {}
 
 // 1 + 32 + 32 + 8 + 8 + 1 + ((32 + 32 + 8) * FUND_POOL_INVESTOR_LIMIT)
 // (32 + 32 + 8 + 8) * + FUND_POOL_WITHDRAWER_LIMIT
-// 84 + 
+// 84 + 2 // for the two lengths 
 const POOL_WALLET_LENGTH : usize = 84 + 
-(80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT) ; 
+(80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT)  + 2; 
 
 impl Pack for FundPool {
 
@@ -214,9 +215,10 @@ impl Pack for FundPool {
         let output = array_mut_ref![dst, 0, POOL_WALLET_LENGTH];
        
         let (is_initialized,manager, address, lamports, 
-        token_count,is_finalized,icon, iv_data_flat,wd_data_flat) = 
+        token_count,is_finalized,icon,ivs_len, 
+        wds_len,iv_data_flat,wd_data_flat) = 
         mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,
-        8, 8,1,2, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
+        8, 8,1,2,1,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
         FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT];
 
     
@@ -228,6 +230,10 @@ impl Pack for FundPool {
         *icon = self.icon.to_le_bytes();
         pack_bool(self.is_finalized, is_finalized);
        
+        *ivs_len = u8::try_from(self.investors.len()).unwrap().to_le_bytes();
+        *wds_len = u8::try_from(self.withdrawers.len()).unwrap().to_le_bytes();
+
+
         let mut offset = 0 ;
 
         for iv in &self.investors {
@@ -274,11 +280,11 @@ impl Pack for FundPool {
         let input = array_ref![src, 0, POOL_WALLET_LENGTH];
        
         let (is_initialized,manager, address, lamports, 
-            token_count,is_finalized, icon, invs_flat,wds_flat) =
+            token_count,is_finalized, icon, invs_len, wds_len, invs_flat,wds_flat) =
 
         array_refs![input, 
         1, PUBKEY_BYTES, PUBKEY_BYTES, 
-        8, 8, 1, 2, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
+        8, 8, 1, 2, 1,1, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
         (FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT)];
 
         let is_init = unpack_bool(is_initialized).unwrap();
@@ -288,10 +294,10 @@ impl Pack for FundPool {
         let lp = u64::from_le_bytes(*lamports);
         let tkc = u64::from_le_bytes(*token_count);
         let ic = u16::from_le_bytes(*icon);
-
+    
         
-        let invs_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT;
-        let mut invs =  Vec::new();//with_capacity(invs_len);
+        let invs_len = u8::from_le_bytes(*invs_len);
+        let mut invs =  Vec::with_capacity(invs_len as usize);
 
         let mut offset = 0 ;
 
@@ -316,8 +322,8 @@ impl Pack for FundPool {
         }
 
 
-        let wds_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT;
-        let mut wds =  Vec::new();//with_capacity(wds_len);
+        let wds_len = u8::from_le_bytes(*wds_len);
+        let mut wds =  Vec::with_capacity(wds_len as usize);
      
         for _ in 0..wds_len {
 
