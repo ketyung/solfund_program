@@ -63,8 +63,9 @@ pub enum PoolInstruction {
 
 const MODULE_POOL_MARRKET : u8 = 33;
 
-
 const MODULE_FUND_POOL : u8 = 1;
+
+const MODULE_COUNTER : u8 = 2;
 
 
 impl PoolInstruction {
@@ -198,6 +199,7 @@ impl PoolInstruction {
 
     }
 }
+
 
 
 fn unpack_pub_key(array : &[u8]) -> Pubkey{
