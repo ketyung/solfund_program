@@ -94,8 +94,13 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
         
         },
 
-        Err(_) => return Ok(false)
+        Err(e) => {
 
+            msg!("Failed to unpack!!! error is ::{:?}", e);
+            return Ok(false)
+
+        } 
+        
     }
     
     msg!("Will create fund pool it doesn't exist yet!!");
