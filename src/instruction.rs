@@ -1,10 +1,10 @@
 use crate::{error::PoolError};
-use crate::state::{FundPool,unpack_bool}; //, PoolMarket};
+use crate::state::{unpack_bool}; //, PoolMarket};
 
 use solana_program::{
     program_error::ProgramError,
     msg, 
-    program_pack::{Pack},
+   // program_pack::{Pack},
     pubkey::{Pubkey, PUBKEY_BYTES},
 };
 use arrayref::{array_ref,  array_refs};
@@ -30,7 +30,16 @@ pub enum PoolInstruction {
 
     UpdateFundPool {
 
-        pool : FundPool,
+        manager : Pubkey,
+
+        lamports : u64,
+
+        token_count : u64, 
+
+        is_finalized : bool,
+
+        icon : u16, 
+
     },
 
 
@@ -99,20 +108,16 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                const L : usize = 51; 
-
-                let output = array_ref![rest, 0, L];
-
                 let (manager,lamports, token_count,is_finalized, icon ) = 
-                array_refs![output, PUBKEY_BYTES, 8,8,1, 2 ];
-        
+                unpack_fund_pool_first_51(&rest);
+
                 Self::CreateFundPool{
 
-                    manager : Pubkey::new_from_array(*manager),
-                    lamports : u64::from_le_bytes(*lamports),
-                    token_count : u64::from_le_bytes(*token_count),
-                    is_finalized : unpack_bool(is_finalized).unwrap(),
-                    icon : u16::from_le_bytes(*icon),
+                    manager : manager,
+                    lamports : lamports,
+                    token_count : token_count,
+                    is_finalized : is_finalized,
+                    icon : icon,
                     
                 }
 
@@ -120,9 +125,18 @@ impl PoolInstruction{
 
             &ACTION_UPDATE => {
 
-                let w = FundPool::unpack(rest).unwrap();
+                let (manager,lamports, token_count,is_finalized, icon ) = 
+                unpack_fund_pool_first_51(&rest);
 
-                Self::UpdateFundPool{ pool : w}
+                Self::UpdateFundPool{ 
+
+                    manager : manager,
+                    lamports : lamports,
+                    token_count : token_count,
+                    is_finalized : is_finalized,
+                    icon : icon,
+
+                }
    
             },
 
@@ -132,6 +146,20 @@ impl PoolInstruction{
 
         })
     }
+}
+// [u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
+fn unpack_fund_pool_first_51(input : &[u8]) -> (Pubkey, u64, u64, bool, u16){
+
+    const L : usize = 51; 
+    let output = array_ref![input, 0, L];
+    let (manager,lamports,token_count,is_finalized,icon) = 
+    array_refs![output, PUBKEY_BYTES, 8,8,1, 2 ];
+
+    ( Pubkey::new_from_array(*manager),
+    u64::from_le_bytes(*lamports),
+    u64::from_le_bytes(*token_count),
+    unpack_bool(is_finalized).unwrap(),
+    u16::from_le_bytes(*icon))
 }
 
 const ACTION_REGISTER_ADDR : u8 = 3;

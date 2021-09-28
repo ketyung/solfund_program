@@ -33,8 +33,8 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
             create_fund_pool(manager, lamports, token_count, is_finalized, icon, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{pool} => {
-            update_fund_pool(pool, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{manager, lamports, token_count, is_finalized, icon} => {
+            update_fund_pool(manager, lamports, token_count, is_finalized, icon, program_id, accounts) 
         },
 
         PoolInstruction::DeleteFundPool => {
@@ -144,8 +144,8 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
     Ok(())
 }
 
-fn update_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
-
+fn update_fund_pool(manager : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
+    icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
     let account_info_iter = &mut accounts.iter();
 
@@ -155,9 +155,18 @@ fn update_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo
 
         let mut w = FundPool::unpack_unchecked(&account.data.borrow())?;
 
-        w.token_count = pool.token_count;
-     
-        FundPool::pack(w, &mut account.data.borrow_mut())?;
+        if w.manager == manager {
+            w.token_count = token_count;
+            w.is_finalized = is_finalized;
+            w.lamports = lamports;
+            w.icon = icon;
+            FundPool::pack(w, &mut account.data.borrow_mut())?;
+        }
+        else {
+
+            msg!("No update, different manager, can't change manager!!");
+        }
+       
     }
     Ok(())
 }
