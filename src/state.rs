@@ -291,7 +291,7 @@ impl Pack for FundPool {
 
         
         let invs_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT;
-        let mut invs =  Vec::with_capacity(invs_len);
+        let mut invs =  Vec::new();//with_capacity(invs_len);
 
         let mut offset = 0 ;
 
@@ -317,7 +317,7 @@ impl Pack for FundPool {
 
 
         let wds_len = FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT;
-        let mut wds =  Vec::with_capacity(wds_len);
+        let mut wds =  Vec::new();//with_capacity(wds_len);
      
         for _ in 0..wds_len {
 
