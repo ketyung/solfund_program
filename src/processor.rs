@@ -13,7 +13,7 @@ use {
     },
     
     crate::instruction::PoolInstruction, 
-    crate::state::{FundPool,PoolMarket,Counter, ManagerPool},
+    crate::state::{FundPool,PoolMarket, ManagerPool},
     crate::{error::PoolError},
 
 };
@@ -28,13 +28,13 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{manager, lamports, token_count, is_finalized, icon} => {
+        PoolInstruction::CreateFundPool{manager, address, lamports, token_count, is_finalized, icon} => {
 
-            create_fund_pool(manager, lamports, token_count, is_finalized, icon, program_id, accounts)
+            create_fund_pool(manager, address, lamports, token_count, is_finalized, icon, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{manager, lamports, token_count, is_finalized, icon} => {
-            update_fund_pool(manager, lamports, token_count, is_finalized, icon, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{manager, address, lamports, token_count, is_finalized, icon} => {
+            update_fund_pool(manager, address, lamports, token_count, is_finalized, icon, program_id, accounts) 
         },
 
         PoolInstruction::DeleteFundPool => {
@@ -42,26 +42,7 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
             delete_fund_pool(program_id, accounts)
 
         },
-        PoolInstruction::CreatePoolMarket => {
-
-            create_pool_market(program_id, accounts)
-        },
-
-        PoolInstruction::RegisterAddrInPoolMarket{address} => {
-
-            register_addr_to_pool_market(address, program_id, accounts)
-        },
-
-        PoolInstruction::RemoveAddrFromPoolMarket{address} => {
-
-            remove_addr_from_pool_market(address, program_id, accounts)
-        },
-
-        PoolInstruction::RemoveAAllAddrsFromPoolMarket => {
-
-            remove_all_addrs_from_pool_market(program_id, accounts)
-        }
-
+       
     }
 
     
@@ -111,7 +92,8 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 }
 
 
-fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
+fn create_fund_pool(  manager : Pubkey,
+    address : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
@@ -119,15 +101,11 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
 
     let fund_pool_account = next_account_info(account_info_iter)?;
 
-   // msg!("create.fund.pool:manager:{:?},lamports:{:?},token_count:{:?},is_f:{:?}, icon:{:?}",
-   // manager, lamports,token_count,is_finalized,icon);
-
 
     if is_account_program_owner(program_id, fund_pool_account).unwrap() {
 
        
         if !fund_pool_exists(fund_pool_account).unwrap() {
-
         
             let mut w = FundPool::new(true);
             w.is_finalized = is_finalized;
@@ -135,11 +113,8 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
             w.lamports = lamports;
             w.manager = manager;
             w.icon = icon ; 
+            w.address = address;
     
-            let manager = w.manager.clone();
-
-            let addr = w.address.clone();
-
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
 
             let manager_pool_account = next_account_info(account_info_iter)?;
@@ -147,12 +122,25 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
             // if manager pool account is valid and provided, register the address
             if manager_pool_account.owner == program_id  {
 
-                register_address_to_manager_pool(addr, manager, manager_pool_account)
+                register_address_to_manager_pool(address, manager, manager_pool_account)
             }
             else {
 
-                msg!("No valid counter account provided");
+                msg!("No valid manager pool account provided");
             }
+
+            let pool_market_account = next_account_info(account_info_iter)?;
+  
+            // if manager pool account is valid and provided, register the address
+            if pool_market_account.owner == program_id && is_finalized {
+
+                register_address_to_pool_market(address, pool_market_account)
+            }
+            else {
+
+                msg!("No valid market pool account provided");
+            }
+
         
         }
     
@@ -160,7 +148,8 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
     Ok(())
 }
 
-fn update_fund_pool(manager : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
+fn update_fund_pool(manager : Pubkey,
+    address : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
     let account_info_iter = &mut accounts.iter();
@@ -171,7 +160,7 @@ fn update_fund_pool(manager : Pubkey, lamports : u64,token_count : u64, is_final
 
         let mut w = FundPool::unpack_unchecked(&account.data.borrow())?;
 
-        if w.manager == manager {
+        if w.manager == manager && w.address == address {
             w.token_count = token_count;
             w.is_finalized = is_finalized;
             w.lamports = lamports;
@@ -198,9 +187,34 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
     if is_account_program_owner(program_id, account).unwrap() {
 
+
+        let fund_pool = FundPool::unpack_unchecked(&account.data.borrow())?;
+
+        let manager = fund_pool.manager.clone();
+        let address = fund_pool.address.clone();
+
+
         let zeros = &vec![0; account.data_len()];
 
         account.data.borrow_mut()[0..zeros.len()].copy_from_slice(zeros);
+
+        let manager_pool_account = next_account_info(account_info_iter)?;
+  
+        // if manager pool account is valid and provided, register the address
+        if manager_pool_account.owner == program_id  {
+
+            remove_address_from_manager_pool(address, manager, manager_pool_account)
+        }
+        
+
+        let pool_market_account = next_account_info(account_info_iter)?;
+  
+        // if manager pool account is valid and provided, register the address
+        if pool_market_account.owner == program_id  {
+
+            remove_address_from_pool_market(address, pool_market_account)
+        }
+      
 
     }
     Ok(())
@@ -209,119 +223,66 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
 
 
-fn pool_market_exists(account : &AccountInfo) -> Result<bool, PoolError> {
 
-    let stored_pool_market = PoolMarket::unpack_unchecked(&account.data.borrow());
 
-        
-    match stored_pool_market{
 
-        Ok(s) => {
+fn register_address_to_pool_market(address : Pubkey, pool_market_account : &AccountInfo) {
 
-            if s.pool_size > 0 {
 
-                msg!("Pool market already created!!");
-                return Err(PoolError::ObjectAlreadyCreated);
-            }
-        
+    let pool_market = PoolMarket::unpack_unchecked(&pool_market_account.data.borrow());
+
+    match pool_market{
+
+        Ok(mut pool) => {
+
+            msg!("Registering address::...");
+            pool.add_fund_pool(address);
+            
+            let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
+
         },
 
-        Err(_) => return Ok(false)
+        Err(_) => {
 
-    }
-    
-    return Ok(false) ;
-}
+            msg!("Failed to unpack pool market, create .default !");
 
+            let pool = PoolMarket::new();
+                     
+            let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
 
-fn create_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramResult{
-
-    let account_info_iter = &mut accounts.iter();
-
-    let account = next_account_info(account_info_iter)?;
-       
-    if is_account_program_owner(program_id, account).unwrap() {
-
-        
-        if !pool_market_exists(account).unwrap(){
-
-            let pool_market = PoolMarket::new();
-        
-            msg!("Creating pool_market::{:?}", pool_market);
-    
-            PoolMarket::pack(pool_market, &mut account.data.borrow_mut())?;
-    
         }
-    }
-
-    Ok(())
-
-}
-
-fn register_addr_to_pool_market(address : Pubkey, program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramResult{
-
-    let account_info_iter = &mut accounts.iter();
-
-    let account = next_account_info(account_info_iter)?;
-
-    if is_account_program_owner(program_id, account).unwrap() {
-
-        let mut pool_market = PoolMarket::unpack_unchecked(&account.data.borrow())?;
-
-
-        msg!("Unpack poolmaket::{:?}", pool_market);
-
-        pool_market.add_fund_pool(address);
-
-        PoolMarket::pack(pool_market, &mut account.data.borrow_mut())?;
 
     }
-
-    Ok(())
 
 }
 
 
-fn remove_addr_from_pool_market(address : Pubkey, program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramResult{
+fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &AccountInfo)  {
 
-    let account_info_iter = &mut accounts.iter();
+ 
+    let pool_market = PoolMarket::unpack_unchecked(&pool_market_account.data.borrow());
 
-    let account = next_account_info(account_info_iter)?;
+    match pool_market{
 
-    if is_account_program_owner(program_id, account).unwrap() {
+        Ok(mut pool) => {
 
-        let mut pool_market = PoolMarket::unpack_unchecked(&account.data.borrow())?;
+            msg!("Removing address from pool market::...");
+            pool.remove_fund_pool(address);
+            
+            let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
 
-        pool_market.remove_fund_pool(address);
+        },
 
-        PoolMarket::pack(pool_market, &mut account.data.borrow_mut())?;
+        Err(_) => {
 
-    }
-
-    Ok(())
-
-}
-
-fn remove_all_addrs_from_pool_market(program_id: &Pubkey,accounts: &[AccountInfo])  -> ProgramResult{
-
-    let account_info_iter = &mut accounts.iter();
-
-    let account = next_account_info(account_info_iter)?;
-
-
-    if is_account_program_owner(program_id, account).unwrap() {
-
-        // when deleting set all its data to zeros
-
-        let zeros = &vec![0; account.data_len()];
-
-        account.data.borrow_mut()[0..zeros.len()].copy_from_slice(zeros);
-
+            msg!("Failed to unpack pool market !");
+        }
 
     }
 
-    Ok(())
+
 }
+
 
 fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_pool_account : &AccountInfo) {
 
@@ -361,9 +322,43 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
     }
  
-
 }
 
+
+fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_pool_account : &AccountInfo) {
+
+
+    let stored_pool = ManagerPool::unpack_unchecked(&manager_pool_account.data.borrow());
+
+    match stored_pool{
+
+        Ok(mut pool) => {
+
+            msg!("Removing address::...");
+            
+            if pool.manager == manager{
+
+              
+                pool.remove_address(address);
+                // Ignore the error  
+
+                let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+
+            }
+   
+          
+        },
+
+        Err(_) => {
+
+            msg!("Failed to unpack manager_pool, create .default !");
+        }
+
+    }
+ 
+}
+
+/*
 fn increment_counter(counter_account : &AccountInfo) {
 
    
@@ -397,7 +392,5 @@ fn increment_counter(counter_account : &AccountInfo) {
 
     }
    
-   
-   
 
-}
+}*/

@@ -18,6 +18,8 @@ pub enum PoolInstruction {
 
         manager : Pubkey,
 
+        address : Pubkey, 
+
         lamports : u64,
 
         token_count : u64, 
@@ -32,6 +34,8 @@ pub enum PoolInstruction {
 
         manager : Pubkey,
 
+        address : Pubkey, 
+        
         lamports : u64,
 
         token_count : u64, 
@@ -45,23 +49,9 @@ pub enum PoolInstruction {
 
     DeleteFundPool ,
 
-    CreatePoolMarket,
-
-    RegisterAddrInPoolMarket {
-
-        address : Pubkey, 
-    },
-
-    RemoveAddrFromPoolMarket {
-
-        address : Pubkey, 
-    },
-
-    RemoveAAllAddrsFromPoolMarket,
-
+   
 }
 
-const MODULE_POOL_MARRKET : u8 = 33;
 
 const MODULE_FUND_POOL : u8 = 1;
 
@@ -79,8 +69,6 @@ impl PoolInstruction {
         Ok(match module {
 
             &MODULE_FUND_POOL => Self::unpack_fund_pool(rest)?,
-
-            &MODULE_POOL_MARRKET => Self::unpack_pool_market(rest)?,
 
             _ => return Err(PoolError::InvalidModule.into()),
 
@@ -107,12 +95,13 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                let (manager,lamports, token_count,is_finalized, icon ) = 
-                unpack_fund_pool_first_51(&rest);
+                let (manager,address, lamports, token_count,is_finalized, icon ) = 
+                unpack_fund_pool_first_83(&rest);
 
                 Self::CreateFundPool{
 
                     manager : manager,
+                    address : address,
                     lamports : lamports,
                     token_count : token_count,
                     is_finalized : is_finalized,
@@ -124,12 +113,13 @@ impl PoolInstruction{
 
             &ACTION_UPDATE => {
 
-                let (manager,lamports, token_count,is_finalized, icon ) = 
-                unpack_fund_pool_first_51(&rest);
+                let (manager, address, lamports, token_count,is_finalized, icon ) = 
+                unpack_fund_pool_first_83(&rest);
 
                 Self::UpdateFundPool{ 
 
                     manager : manager,
+                    address : address,
                     lamports : lamports,
                     token_count : token_count,
                     is_finalized : is_finalized,
@@ -146,63 +136,29 @@ impl PoolInstruction{
         })
     }
 }
-// [u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
-fn unpack_fund_pool_first_51(input : &[u8]) -> (Pubkey, u64, u64, bool, u16){
+// [u8;32], [u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
+fn unpack_fund_pool_first_83(input : &[u8]) -> (Pubkey, Pubkey, u64, u64, bool, u16){
 
-    const L : usize = 51; 
+    const L : usize = 83; 
     let output = array_ref![input, 0, L];
-    let (manager,lamports,token_count,is_finalized,icon) = 
-    array_refs![output, PUBKEY_BYTES, 8,8,1, 2 ];
+    let (manager,address, lamports,token_count,is_finalized,icon) = 
+    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, 8,8,1, 2 ];
 
-    ( Pubkey::new_from_array(*manager),
+    (  Pubkey::new_from_array(*manager),
+    Pubkey::new_from_array(*address),
     u64::from_le_bytes(*lamports),
     u64::from_le_bytes(*token_count),
     unpack_bool(is_finalized).unwrap(),
     u16::from_le_bytes(*icon))
 }
 
-const ACTION_REGISTER_ADDR : u8 = 3;
-
-const ACTION_REMOVE_ADDR : u8 = 4;
-
-const ACTION_REMOVE_ALL_ADDRS : u8 = 44;
-
-impl PoolInstruction {
 
 
-    fn unpack_pool_market(input : &[u8])-> Result<Self, ProgramError>{
-
-        let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
-        
-        msg!("PoolMarket's action is {}",action);
-      
-        Ok(match action  {
-
-            &ACTION_CREATE => Self::CreatePoolMarket,
-
-            &ACTION_REGISTER_ADDR => {
-                Self::RegisterAddrInPoolMarket{ address : unpack_pub_key(rest) }   
-            },
-
-            &ACTION_REMOVE_ADDR => {
-                Self::RemoveAddrFromPoolMarket{ address : unpack_pub_key(rest) }   
-            },
-
-            &ACTION_REMOVE_ALL_ADDRS => Self::RemoveAAllAddrsFromPoolMarket, 
-
-            
-            _ => return Err(PoolError::InvalidAction.into()),
-
-        })
-
-    }
-}
-
-
-
+/*
+// maybe needed later
 fn unpack_pub_key(array : &[u8]) -> Pubkey{
 
     let mut a : [u8; 32] = [1; 32];
     a.copy_from_slice(array);
     return Pubkey::new_from_array(a);
-}
+}*/
