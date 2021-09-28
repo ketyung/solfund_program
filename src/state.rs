@@ -70,6 +70,101 @@ impl Pack for Counter {
     }
 }
 
+
+pub const MANAGER_POOL_SIZE_LIMIT : usize = 10;
+
+#[derive(Clone, Debug, PartialEq)]
+pub struct ManagerPool {
+
+    manager : Pubkey, 
+    
+    addresses : Vec<Pubkey>,
+
+}
+
+impl ManagerPool {
+
+    pub fn new() -> Self {
+
+        ManagerPool{
+
+            manager : Pubkey::default(),
+            
+            addresses : Vec::with_capacity(MANAGER_POOL_SIZE_LIMIT),
+            
+        }
+    }
+}
+
+impl Sealed for ManagerPool{}
+
+impl Pack for ManagerPool {
+
+    const LEN: usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ;
+
+    fn pack_into_slice(&self, dst: &mut [u8]) {
+
+        const L : usize =  PUBKEY_BYTES + 1 + (PUBKEY_BYTES *  MANAGER_POOL_SIZE_LIMIT); 
+
+        let output = array_mut_ref![dst, 0, L];
+
+        let (manager,addrs_len, addr_as_data_flat) = 
+        mut_array_refs![output, PUBKEY_BYTES, 1, (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ];
+
+        
+        *addrs_len = u8::try_from(self.addresses.len()).unwrap().to_le_bytes();
+       
+        manager.copy_from_slice(self.manager.as_ref());
+      
+        let mut offset = 0;
+
+        for a in &self.addresses {
+
+            let addr_flat = array_mut_ref![addr_as_data_flat, offset, PUBKEY_BYTES];
+
+            let (pack_addr, _) = mut_array_refs![addr_flat, PUBKEY_BYTES, 0];
+
+            pack_addr.copy_from_slice(a.as_ref());
+
+            offset += PUBKEY_BYTES;
+        }
+
+       
+    }
+
+    fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
+
+        const L : usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ; 
+
+        let input = array_ref![src, 0, L];
+        
+        let (manager, addr_len, pools) = array_refs![input, PUBKEY_BYTES ,1, 
+        (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ];
+
+        let addr_len = u8::from_le_bytes(*addr_len);
+
+        let mut offset = 0 ;
+
+        let mut addresses =  Vec::with_capacity(addr_len as usize);
+
+        for _ in 0..addr_len {
+
+            let pk = array_ref![pools, offset, PUBKEY_BYTES];
+
+            addresses.push(Pubkey::new_from_array(*pk));
+
+            offset += PUBKEY_BYTES;
+        }
+
+        Ok(Self{
+            manager : Pubkey::new_from_array(*manager) ,
+            addresses : addresses,
+        })
+    }
+}
+
+
+
 #[derive(Clone, Debug, PartialEq)]
 pub struct PoolMarket {
 
