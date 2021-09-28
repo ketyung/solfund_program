@@ -164,6 +164,32 @@ impl Pack for ManagerPool {
 }
 
 
+impl ManagerPool {
+
+    pub fn add_address (&mut self,  pubkey : Pubkey){
+
+        if self.addresses.len() < MANAGER_POOL_SIZE_LIMIT  {
+
+            if !self.addresses.contains(&pubkey){
+
+                self.addresses.push(pubkey);
+            }
+        }
+    }
+
+
+    pub fn remove_address(&mut self, pubkey : Pubkey) {
+
+        let idx = self.addresses.iter().position(|&r| r == pubkey);
+        if idx.is_some() {
+
+            self.addresses.remove(idx.unwrap());
+    
+        }
+    }
+
+}
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PoolMarket {
