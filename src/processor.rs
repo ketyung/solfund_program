@@ -40,7 +40,7 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
         PoolInstruction::DeleteFundPool => {
 
             delete_fund_pool(program_id, accounts)
-            
+
         },
         PoolInstruction::CreatePoolMarket => {
 
@@ -165,6 +165,8 @@ fn update_fund_pool(pool : FundPool, program_id: &Pubkey,accounts: &[AccountInfo
 fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
+    msg!("Deleting fund pool...");
+    
     let account_info_iter = &mut accounts.iter();
 
     let account = next_account_info(account_info_iter)?;
