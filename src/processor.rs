@@ -98,6 +98,8 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
     }
     
+    msg!("Will create fund pool it doesn't exist yet!!");
+            
     return Ok(false) ;
 }
 
