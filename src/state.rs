@@ -10,6 +10,61 @@ use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use crate::{error::PoolError};
 use std::convert::{TryFrom};
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Counter {
+
+    pub count : u16, 
+}
+
+impl Counter {
+
+    pub fn new() -> Self {
+
+        Counter {
+
+            count : 0
+        }
+    }
+
+    pub fn increment(&mut self){
+
+        self.count +=1 ;
+    }
+}
+
+impl Sealed for Counter{}
+
+impl Pack for Counter {
+
+    const LEN: usize = 2;
+
+    fn pack_into_slice(&self, dst: &mut [u8]) {
+
+        const L : usize =  2; 
+
+        let output = array_mut_ref![dst, 0, L];
+
+        let (count,_) = mut_array_refs![output, 2, 0 ];
+
+         *count = self.count.to_le_bytes();
+
+    }
+
+    fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
+
+        const L : usize = 2 ; 
+
+        let input = array_ref![src, 0, L];
+        
+        let (count,_) = array_refs![input, 2, 0 ];
+
+        let count = u16::from_le_bytes(*count);
+
+        Ok(Self{
+           count : count,
+        })
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PoolMarket {
@@ -143,6 +198,7 @@ impl Pack for PoolMarket {
         })
     }
 }
+
 
 
 #[derive(Clone, Debug)]
