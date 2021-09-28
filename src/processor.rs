@@ -13,7 +13,7 @@ use {
     },
     
     crate::instruction::PoolInstruction, 
-    crate::state::{FundPool,PoolMarket,Counter},
+    crate::state::{FundPool,PoolMarket,Counter, ManagerPool},
     crate::{error::PoolError},
 
 };
@@ -136,14 +136,18 @@ fn create_fund_pool(  manager : Pubkey, lamports : u64,token_count : u64, is_fin
             w.manager = manager;
             w.icon = icon ; 
     
+            let manager = w.manager.clone();
+
+            let addr = w.address.clone();
+
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
 
-            let counter_account = next_account_info(account_info_iter)?;
+            let manager_pool_account = next_account_info(account_info_iter)?;
   
-            // if counter account is valid and provided, increment the counter
-            if counter_account.owner == program_id  {
+            // if manager pool account is valid and provided, register the address
+            if manager_pool_account.owner == program_id  {
 
-                increment_counter(&counter_account)
+                register_address_to_manager_pool(addr, manager, manager_pool_account)
             }
             else {
 
@@ -317,6 +321,47 @@ fn remove_all_addrs_from_pool_market(program_id: &Pubkey,accounts: &[AccountInfo
     }
 
     Ok(())
+}
+
+fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_pool_account : &AccountInfo) {
+
+
+    let stored_pool = ManagerPool::unpack_unchecked(&manager_pool_account.data.borrow());
+
+    match stored_pool{
+
+        Ok(mut pool) => {
+
+            msg!("Registering address::...");
+            
+            if pool.manager == manager{
+
+              
+                pool.add_address(address);
+                // Ignore the error  
+
+                let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+
+            }
+   
+          
+        },
+
+        Err(_) => {
+
+            msg!("Failed to unpack manager_pool, create .default !");
+
+            let mut pool = ManagerPool::new();
+           
+            pool.manager = manager;
+
+            let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+
+        }
+
+    }
+ 
+
 }
 
 fn increment_counter(counter_account : &AccountInfo) {

@@ -76,7 +76,7 @@ pub const MANAGER_POOL_SIZE_LIMIT : usize = 10;
 #[derive(Clone, Debug, PartialEq)]
 pub struct ManagerPool {
 
-    manager : Pubkey, 
+    pub manager : Pubkey, 
     
     addresses : Vec<Pubkey>,
 
@@ -185,6 +185,11 @@ impl ManagerPool {
 
             self.addresses.remove(idx.unwrap());
         }
+    }
+
+    pub fn all(&self) -> Vec<Pubkey>{
+
+        self.addresses.clone()
     }
 
 }
