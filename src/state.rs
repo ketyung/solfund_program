@@ -134,12 +134,12 @@ impl Pack for ManagerPool {
 
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
 
-        const L : usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ; 
+        const L : usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ; 
 
         let input = array_ref![src, 0, L];
         
         let (manager, addr_len, pools) = array_refs![input, PUBKEY_BYTES ,1, 
-        (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ];
+        (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ];
 
         let addr_len = u8::from_le_bytes(*addr_len);
 
