@@ -132,7 +132,7 @@ fn create_fund_pool(  manager : Pubkey,
             let pool_market_account = next_account_info(account_info_iter)?;
   
             // if manager pool account is valid and provided, register the address
-            if pool_market_account.owner == program_id && is_finalized {
+            if pool_market_account.owner == program_id /* && is_finalized */ {
 
                 register_address_to_pool_market(address, pool_market_account)
             }
