@@ -305,7 +305,17 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
                 pool.add_address(address);
                 // Ignore the error  
 
-                let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+                let s = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+
+                match s {
+
+                    Ok(p) => {
+                        msg!("Successfully packed m.pool:{:?}", p );
+                    },
+                    Err(e) => {
+                        msg!("Error.packing manager pool :{:?}",e);
+                    }
+                }
 
             }
    
