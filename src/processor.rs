@@ -194,9 +194,7 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
         let fund_pool = FundPool::unpack_unchecked(&account.data.borrow())?;
 
-        let manager = fund_pool.manager.clone();
-        let address = fund_pool.address.clone();
-
+       
 
         let zeros = &vec![0; account.data_len()];
 
@@ -207,7 +205,7 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
         // if manager pool account is valid and provided, register the address
         if manager_pool_account.owner == program_id  {
 
-            remove_address_from_manager_pool(address, manager, manager_pool_account)
+            remove_address_from_manager_pool(fund_pool.address, fund_pool.manager, manager_pool_account)
         }
         
 
@@ -216,7 +214,7 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
         // if manager pool account is valid and provided, register the address
         if pool_market_account.owner == program_id  {
 
-            remove_address_from_pool_market(address, pool_market_account)
+            remove_address_from_pool_market(fund_pool.address, pool_market_account)
         }
       
 
@@ -270,6 +268,8 @@ fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &Acco
 
         Ok(mut pool) => {
 
+            msg!("Going to remove addr from pool,market :{:?}", address);
+                
             msg!("Removing address from pool market::...current: {:?}", pool);
             pool.remove_fund_pool(address);
             
@@ -352,6 +352,8 @@ fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
             
             if pool.manager == manager{
+
+                msg!("Going to remove addr from manager_pool :{:?}", address);
 
               
                 msg!("b4.Removing address::...current {:?}", pool);
