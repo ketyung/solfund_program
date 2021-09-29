@@ -181,19 +181,23 @@ impl ManagerPool {
     pub fn remove_address(&mut self, pubkey : Pubkey) {
 
 
-        self.addresses.retain(|&x| x != pubkey);
+      //  self.addresses.retain(|&x| x != pubkey);
 
-        /* 
         let idx = self.addresses.iter().position(|&r| r == pubkey);
         if idx.is_some() {
 
             self.addresses.remove(idx.unwrap());
-        }*/
+        }
     }
 
     pub fn all(&self) -> Vec<Pubkey>{
 
         self.addresses.clone()
+    }
+
+    pub fn len(&self) -> usize{
+
+        self.addresses.len()
     }
 
 }
@@ -247,8 +251,6 @@ impl PoolMarket {
     pub fn remove_fund_pool(&mut self, pubkey : Pubkey) {
 
 
-        msg!("Can we remove usng retain??");
-
         self.fund_pools.retain(|&x| x != pubkey);
 
         /*
@@ -258,9 +260,17 @@ impl PoolMarket {
             self.fund_pools.remove(idx.unwrap());
             self.pool_size = self.fund_pools.len() as u16;
 
-        }*/
+        } 
+        */
 
     }
+
+
+    pub fn len(&self) -> usize{
+
+        self.fund_pools.len()
+    }
+
 
     pub fn all(&self) -> Vec<Pubkey>{
 

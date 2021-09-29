@@ -268,8 +268,9 @@ fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &Acco
 
         Ok(mut pool) => {
 
-            msg!("Going to remove addr from pool..market :{:?}", address);
+            msg!("Going to remove addr from pool..market :{:?}, size::{}", address, pool.len());
                 
+            // Print the pool causing exceeding compute cycle, so don't do it!!
            // msg!("Removing address from pool market::...current: {:?}", pool);
             pool.remove_fund_pool(address);
             
@@ -353,15 +354,10 @@ fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_
             
             if pool.manager == manager{
 
-                msg!("Going to remove addr from manager_pool :{:?}", address);
+                msg!("Going to remove addr from manager_pool :{:?}, len::{}", address, pool.len());
 
-              
-                msg!("b4.Removing address::...current {:?}", pool);
-          
+                 
                 pool.remove_address(address);
-          
-                // Ignore the error  
-                msg!("Removing address::...current {:?}", pool);
           
                 let s = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
 
