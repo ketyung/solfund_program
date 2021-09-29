@@ -352,9 +352,9 @@ fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_
         Ok(mut pool) => {
 
             
-            if pool.manager == manager{
+            msg!("Going to remove addr from manager_pool :{:?}, len::{}", address, pool.len());
 
-                msg!("Going to remove addr from manager_pool :{:?}, len::{}", address, pool.len());
+            if pool.manager == manager{
 
                  
                 pool.remove_address(address);
