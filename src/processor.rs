@@ -237,7 +237,7 @@ fn register_address_to_pool_market(address : Pubkey, pool_market_account : &Acco
 
         Ok(mut pool) => {
 
-            msg!("MarketPool.Registering address::...current:{:?}", pool);
+            //msg!("MarketPool.Registering address::...current:{:?}", pool);
             pool.add_fund_pool(address);
             
             let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
@@ -298,7 +298,7 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
         Ok(mut pool) => {
 
-            msg!("ManagerPool.Registering address::... current:{:?}", pool);
+          //  msg!("ManagerPool.Registering address::... current:{:?}", pool);
             
 
             if pool.manager == manager || pool.manager == Pubkey::default()   {
