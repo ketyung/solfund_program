@@ -308,9 +308,9 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
           
         },
 
-        Err(_) => {
+        Err(e) => {
 
-            msg!("Failed to unpack manager_pool, create .default !");
+            msg!("Failed to unpack manager_pool, create .default !, {:?}", e);
 
             let mut pool = ManagerPool::new();
            
