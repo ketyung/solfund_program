@@ -268,9 +268,9 @@ fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &Acco
 
         Ok(mut pool) => {
 
-            msg!("Going to remove addr from pool,market :{:?}", address);
+            msg!("Going to remove addr from pool..market :{:?}", address);
                 
-            msg!("Removing address from pool market::...current: {:?}", pool);
+           // msg!("Removing address from pool market::...current: {:?}", pool);
             pool.remove_fund_pool(address);
             
             let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
