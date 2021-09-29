@@ -303,6 +303,7 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
             if pool.manager == manager || pool.manager == Pubkey::default()   {
 
               
+                pool.manager = manager;
                 pool.add_address(address);
                 // Ignore the error  
 
