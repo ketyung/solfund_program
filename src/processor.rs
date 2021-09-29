@@ -119,7 +119,7 @@ fn create_fund_pool(  manager : Pubkey,
 
             let manager_pool_account = next_account_info(account_info_iter)?;
   
-            msg!("manager_pool_account {:?}", manager_pool_account);
+           // msg!("manager_pool_account {:?}", manager_pool_account);
             
             // if manager pool account is valid and provided, register the address
             if manager_pool_account.owner == program_id  {
@@ -133,7 +133,7 @@ fn create_fund_pool(  manager : Pubkey,
 
             let pool_market_account = next_account_info(account_info_iter)?;
   
-            msg!("pool_market_acc {:?}", pool_market_account);
+           // msg!("pool_market_acc {:?}", pool_market_account);
 
             // if manager pool account is valid and provided, register the address
             if pool_market_account.owner == program_id /* && is_finalized */ {
@@ -239,7 +239,7 @@ fn register_address_to_pool_market(address : Pubkey, pool_market_account : &Acco
 
         Ok(mut pool) => {
 
-            msg!("Registering address::...current:{:?}", pool);
+            msg!("MarketPool.Registering address::...current:{:?}", pool);
             pool.add_fund_pool(address);
             
             let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
@@ -297,7 +297,7 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
         Ok(mut pool) => {
 
-            msg!("Registering address::... current:{:?}", pool);
+            msg!("ManagerPool.Registering address::... current:{:?}", pool);
             
             if pool.manager == manager{
 
