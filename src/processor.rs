@@ -350,14 +350,15 @@ fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
         Ok(mut pool) => {
 
-            msg!("Removing address::...current {:?}", pool);
             
             if pool.manager == manager{
 
               
                 pool.remove_address(address);
+          
                 // Ignore the error  
-
+                msg!("Removing address::...current {:?}", pool);
+          
                 let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
 
             }
