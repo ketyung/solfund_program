@@ -354,13 +354,24 @@ fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_
             if pool.manager == manager{
 
               
+                msg!("b4.Removing address::...current {:?}", pool);
+          
                 pool.remove_address(address);
           
                 // Ignore the error  
                 msg!("Removing address::...current {:?}", pool);
           
-                let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+                let s = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
 
+                match s {
+
+                    Ok(p) => {
+                        msg!("Successfully packed m.pool:{:?}", p );
+                    },
+                    Err(e) => {
+                        msg!("Error.packing manager pool :{:?}",e);
+                    }
+                }
             }
    
           
