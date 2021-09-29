@@ -299,7 +299,8 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
             msg!("ManagerPool.Registering address::... current:{:?}", pool);
             
-            if pool.manager == manager{
+
+            if pool.manager == manager || pool.manager == Pubkey::default()   {
 
               
                 pool.add_address(address);
