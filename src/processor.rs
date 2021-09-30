@@ -119,32 +119,17 @@ fn create_fund_pool(  manager : Pubkey,
 
             let manager_pool_account = next_account_info(account_info_iter)?;
   
-           // msg!("manager_pool_account {:?}", manager_pool_account);
-            
-            // if manager pool account is valid and provided, register the address
             if manager_pool_account.owner == program_id  {
 
                 register_address_to_manager_pool(address, manager, manager_pool_account)
             }
-            else {
-
-                msg!("No valid manager pool account provided");
-            }
-
+        
             let pool_market_account = next_account_info(account_info_iter)?;
   
-           // msg!("pool_market_acc {:?}", pool_market_account);
-
-            // if manager pool account is valid and provided, register the address
             if pool_market_account.owner == program_id /* && is_finalized */ {
 
                 register_address_to_pool_market(address, pool_market_account)
             }
-            else {
-
-                msg!("No valid market pool account provided");
-            }
-
         
         }
     
