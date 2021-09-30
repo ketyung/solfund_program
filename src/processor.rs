@@ -100,6 +100,16 @@ fn create_fund_pool(  manager : Pubkey,
     let account_info_iter = &mut accounts.iter();
 
     let fund_pool_account = next_account_info(account_info_iter)?;
+    let manager_pool_account = next_account_info(account_info_iter)?;
+    let pool_market_account = next_account_info(account_info_iter)?;
+    let signer_account = next_account_info(account_info_iter)?;
+
+
+    // check for signer
+    if !signer_account.is_signer {
+
+        return Err(ProgramError::MissingRequiredSignature);
+    }
 
 
     if is_account_program_owner(program_id, fund_pool_account).unwrap() {
@@ -117,15 +127,13 @@ fn create_fund_pool(  manager : Pubkey,
     
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
 
-            let manager_pool_account = next_account_info(account_info_iter)?;
-  
+         
             if manager_pool_account.owner == program_id  {
 
                 register_address_to_manager_pool(address, manager, manager_pool_account)
             }
         
-            let pool_market_account = next_account_info(account_info_iter)?;
-  
+           
             if pool_market_account.owner == program_id /* && is_finalized */ {
 
                 register_address_to_pool_market(address, pool_market_account)
@@ -173,30 +181,36 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
     let account_info_iter = &mut accounts.iter();
 
     let account = next_account_info(account_info_iter)?;
+    let manager_pool_account = next_account_info(account_info_iter)?;
+    let pool_market_account = next_account_info(account_info_iter)?;
+    let signer_account = next_account_info(account_info_iter)?;
+
+
+    // check for signer
+    if !signer_account.is_signer {
+
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+
+
 
     if is_account_program_owner(program_id, account).unwrap() {
 
 
         let fund_pool = FundPool::unpack_unchecked(&account.data.borrow())?;
 
-       
-
+    
         let zeros = &vec![0; account.data_len()];
 
         account.data.borrow_mut()[0..zeros.len()].copy_from_slice(zeros);
 
-        let manager_pool_account = next_account_info(account_info_iter)?;
-  
-        // if manager pool account is valid and provided, register the address
+       
         if manager_pool_account.owner == program_id  {
 
             remove_address_from_manager_pool(fund_pool.address, fund_pool.manager, manager_pool_account)
         }
         
-
-        let pool_market_account = next_account_info(account_info_iter)?;
-  
-        // if manager pool account is valid and provided, register the address
+       
         if pool_market_account.owner == program_id  {
 
             remove_address_from_pool_market(fund_pool.address, pool_market_account)
