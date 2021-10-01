@@ -104,7 +104,7 @@ fn create_fund_pool(  manager : Pubkey,
     let user_pool_account = next_account_info(account_info_iter)?;
     let market_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
-
+    let token_account = next_account_info(account_info_iter)?; // expecting the last acc is the token acc
 
     // check for signer
     if !signer_account.is_signer {
@@ -140,11 +140,21 @@ fn create_fund_pool(  manager : Pubkey,
 
                 register_address_to_market(address, market_account)
             }
+
+            if *token_account.owner != spl_token::id() {
+                mint_token(token_account, token_count);
+            }
         
         }
     
     }
     Ok(())
+}
+
+fn mint_token (token_account : &AccountInfo, token_count : u64) {
+
+    msg!("Going to mint {} tokens by {:?}", token_count, token_account.key )
+
 }
 
 fn update_fund_pool(manager : Pubkey,
