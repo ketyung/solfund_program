@@ -167,16 +167,11 @@ fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo, toke
     )
     .unwrap();
 
-    /*
-    let _mint_to = mint_to(token_program_id: &Pubkey, 
-        mint_pubkey: &Pubkey, account_pubkey: &Pubkey, owner_pubkey: &Pubkey, signer_pubkeys: &[&Pubkey], amount: u64)(
-        &spl_token::ID,
-        &token_account.key,
-        &signer_account.key,
-        Some(signer_account.key),
-        3,
-    )
-    .unwrap(); */
+    //let _mint_to = mint_to(token_program_id: &spl_token::ID, 
+    //    mint_pubkey: &Pubkey, account_pubkey: &Pubkey, 
+    //    owner_pubkey: &Pubkey, signer_pubkeys: 
+    //    &[signer_account.key],   )
+    //.unwrap(); 
 
     
 
