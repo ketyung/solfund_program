@@ -10,85 +10,25 @@ use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use crate::{error::PoolError};
 use std::convert::{TryFrom};
 
-#[derive(Clone, Debug, PartialEq)]
-pub struct Counter {
-
-    pub count : u16, 
-}
-
-impl Counter {
-
-    pub fn new() -> Self {
-
-        Counter {
-
-            count : 0
-        }
-    }
-
-    pub fn increment(&mut self){
-
-        if self.count < 65535 {
-
-            self.count +=1 ;
-  
-        }
-    }
-}
-
-impl Sealed for Counter{}
-
-impl Pack for Counter {
-
-    const LEN: usize = 2;
-
-    fn pack_into_slice(&self, dst: &mut [u8]) {
-
-        const L : usize =  2; 
-
-        let output = array_mut_ref![dst, 0, L];
-
-        let (count,_) = mut_array_refs![output, 2, 0 ];
-
-         *count = self.count.to_le_bytes();
-
-    }
-
-    fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
-
-        const L : usize = 2 ; 
-
-        let input = array_ref![src, 0, L];
-        
-        let (count,_) = array_refs![input, 2, 0 ];
-
-        let count = u16::from_le_bytes(*count);
-
-        Ok(Self{
-           count : count,
-        })
-    }
-}
-
 
 pub const MANAGER_POOL_SIZE_LIMIT : usize = 10;
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct ManagerPool {
+pub struct UserPool {
 
-    pub manager : Pubkey, 
+    pub user : Pubkey, 
     
     addresses : Vec<Pubkey>,
 
 }
 
-impl ManagerPool {
+impl UserPool {
 
     pub fn new() -> Self {
 
-        ManagerPool{
+        UserPool{
 
-            manager : Pubkey::default(),
+            user : Pubkey::default(),
             
             addresses : Vec::with_capacity(MANAGER_POOL_SIZE_LIMIT),
             
@@ -96,9 +36,9 @@ impl ManagerPool {
     }
 }
 
-impl Sealed for ManagerPool{}
+impl Sealed for UserPool{}
 
-impl Pack for ManagerPool {
+impl Pack for UserPool {
 
     const LEN: usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ;
 
@@ -108,13 +48,13 @@ impl Pack for ManagerPool {
 
         let output = array_mut_ref![dst, 0, L];
 
-        let (manager,addrs_len, addr_as_data_flat) = 
+        let (user,addrs_len, addr_as_data_flat) = 
         mut_array_refs![output, PUBKEY_BYTES, 1, (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ];
 
         
         *addrs_len = u8::try_from(self.addresses.len()).unwrap().to_le_bytes();
        
-        manager.copy_from_slice(self.manager.as_ref());
+        user.copy_from_slice(self.user.as_ref());
       
         let mut offset = 0;
 
@@ -138,7 +78,7 @@ impl Pack for ManagerPool {
 
         let input = array_ref![src, 0, L];
         
-        let (manager, addr_len, pools) = array_refs![input, PUBKEY_BYTES ,1, 
+        let (user, addr_len, pools) = array_refs![input, PUBKEY_BYTES ,1, 
         (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ];
 
         let addr_len = u8::from_le_bytes(*addr_len);
@@ -157,14 +97,14 @@ impl Pack for ManagerPool {
         }
 
         Ok(Self{
-            manager : Pubkey::new_from_array(*manager) ,
+            user : Pubkey::new_from_array(*user) ,
             addresses : addresses,
         })
     }
 }
 
 
-impl ManagerPool {
+impl UserPool {
 
     pub fn add_address (&mut self,  pubkey : Pubkey){
 

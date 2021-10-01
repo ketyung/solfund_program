@@ -13,7 +13,7 @@ use {
     },
     
     crate::instruction::PoolInstruction, 
-    crate::state::{FundPool,PoolMarket, ManagerPool},
+    crate::state::{FundPool,PoolMarket, UserPool},
     crate::{error::PoolError},
 
 };
@@ -100,8 +100,8 @@ fn create_fund_pool(  manager : Pubkey,
     let account_info_iter = &mut accounts.iter();
 
     let fund_pool_account = next_account_info(account_info_iter)?;
-    let manager_pool_account = next_account_info(account_info_iter)?;
-    let pool_market_account = next_account_info(account_info_iter)?;
+    let user_pool_account = next_account_info(account_info_iter)?;
+    let market_pool_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
 
 
@@ -128,15 +128,15 @@ fn create_fund_pool(  manager : Pubkey,
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
 
          
-            if manager_pool_account.owner == program_id  {
+            if user_pool_account.owner == program_id  {
 
-                register_address_to_manager_pool(address, manager, manager_pool_account)
+                register_address_to_user_pool(address, manager, user_pool_account)
             }
         
            
-            if pool_market_account.owner == program_id /* && is_finalized */ {
+            if market_pool_account.owner == program_id /* && is_finalized */ {
 
-                register_address_to_pool_market(address, pool_market_account)
+                register_address_to_market_pool(address, market_pool_account)
             }
         
         }
@@ -181,8 +181,8 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
     let account_info_iter = &mut accounts.iter();
 
     let account = next_account_info(account_info_iter)?;
-    let manager_pool_account = next_account_info(account_info_iter)?;
-    let pool_market_account = next_account_info(account_info_iter)?;
+    let user_pool_account = next_account_info(account_info_iter)?;
+    let market_pool_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
 
 
@@ -191,7 +191,6 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
         return Err(ProgramError::MissingRequiredSignature);
     }
-
 
 
     if is_account_program_owner(program_id, account).unwrap() {
@@ -205,15 +204,15 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
         account.data.borrow_mut()[0..zeros.len()].copy_from_slice(zeros);
 
        
-        if manager_pool_account.owner == program_id  {
+        if user_pool_account.owner == program_id  {
 
-            remove_address_from_manager_pool(fund_pool.address, fund_pool.manager, manager_pool_account)
+            remove_address_from_user_pool(fund_pool.address, fund_pool.manager, user_pool_account)
         }
         
        
-        if pool_market_account.owner == program_id  {
+        if market_pool_account.owner == program_id  {
 
-            remove_address_from_pool_market(fund_pool.address, pool_market_account)
+            remove_address_from_pool_market(fund_pool.address, market_pool_account)
         }
       
 
@@ -223,23 +222,19 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
 
 
+fn register_address_to_market_pool(address : Pubkey, market_pool_account : &AccountInfo) {
 
 
+    let market_pool = PoolMarket::unpack_unchecked(&market_pool_account.data.borrow());
 
-
-fn register_address_to_pool_market(address : Pubkey, pool_market_account : &AccountInfo) {
-
-
-    let pool_market = PoolMarket::unpack_unchecked(&pool_market_account.data.borrow());
-
-    match pool_market{
+    match market_pool{
 
         Ok(mut pool) => {
 
             //msg!("MarketPool.Registering address::...current:{:?}", pool);
             pool.add_fund_pool(address);
             
-            let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
+            let _ = PoolMarket::pack(pool, &mut market_pool_account.data.borrow_mut());
 
         },
 
@@ -249,7 +244,7 @@ fn register_address_to_pool_market(address : Pubkey, pool_market_account : &Acco
 
             let pool = PoolMarket::new();
                      
-            let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
+            let _ = PoolMarket::pack(pool, &mut market_pool_account.data.borrow_mut());
 
         }
 
@@ -258,12 +253,12 @@ fn register_address_to_pool_market(address : Pubkey, pool_market_account : &Acco
 }
 
 
-fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &AccountInfo)  {
+fn remove_address_from_pool_market(address : Pubkey, market_pool_account : &AccountInfo)  {
 
  
-    let pool_market = PoolMarket::unpack_unchecked(&pool_market_account.data.borrow());
+    let market_pool = PoolMarket::unpack_unchecked(&market_pool_account.data.borrow());
 
-    match pool_market{
+    match market_pool{
 
         Ok(mut pool) => {
 
@@ -273,7 +268,7 @@ fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &Acco
            // msg!("Removing address from pool market::...current: {:?}", pool);
             pool.remove_fund_pool(address);
             
-            let _ = PoolMarket::pack(pool, &mut pool_market_account.data.borrow_mut());
+            let _ = PoolMarket::pack(pool, &mut market_pool_account.data.borrow_mut());
 
         },
 
@@ -288,26 +283,26 @@ fn remove_address_from_pool_market(address : Pubkey, pool_market_account : &Acco
 }
 
 
-fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_pool_account : &AccountInfo) {
+fn register_address_to_user_pool(address : Pubkey, user : Pubkey, user_pool_account : &AccountInfo) {
 
 
-    let stored_pool = ManagerPool::unpack_unchecked(&manager_pool_account.data.borrow());
+    let stored_pool = UserPool::unpack_unchecked(&user_pool_account.data.borrow());
 
     match stored_pool{
 
         Ok(mut pool) => {
 
-          //  msg!("ManagerPool.Registering address::... current:{:?}", pool);
+          //  msg!("UserPool.Registering address::... current:{:?}", pool);
             
 
-            if pool.manager == manager || pool.manager == Pubkey::default()   {
+            if pool.user == user || pool.user == Pubkey::default()   {
 
               
-                pool.manager = manager;
+                pool.user = user;
                 pool.add_address(address);
                 // Ignore the error  
 
-                let s = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+                let s = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
 
                 match s {
 
@@ -326,13 +321,13 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
         Err(e) => {
 
-            msg!("Failed to unpack manager_pool, create .default !, {:?}", e);
+            msg!("Failed to unpack user_pool, create .default !, {:?}", e);
 
-            let mut pool = ManagerPool::new();
+            let mut pool = UserPool::new();
            
-            pool.manager = manager;
+            pool.user = user;
 
-            let _ = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+            let _ = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
 
         }
 
@@ -341,24 +336,24 @@ fn register_address_to_manager_pool(address : Pubkey, manager : Pubkey, manager_
 }
 
 
-fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_pool_account : &AccountInfo) {
+fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_account : &AccountInfo) {
 
 
-    let stored_pool = ManagerPool::unpack_unchecked(&manager_pool_account.data.borrow());
+    let stored_pool = UserPool::unpack_unchecked(&user_pool_account.data.borrow());
 
     match stored_pool{
 
         Ok(mut pool) => {
 
             
-            msg!("Going to remove addr from manager_pool :{:?}, len::{}", address, pool.len());
+            msg!("Going to remove addr from user_pool :{:?}, len::{}", address, pool.len());
 
-            if pool.manager == manager{
+            if pool.user == user{
 
                  
                 pool.remove_address(address);
           
-                let s = ManagerPool::pack(pool, &mut manager_pool_account.data.borrow_mut());
+                let s = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
 
                 match s {
 
@@ -376,7 +371,7 @@ fn remove_address_from_manager_pool(address : Pubkey, manager : Pubkey, manager_
 
         Err(_) => {
 
-            msg!("Failed to unpack manager_pool, create .default !");
+            msg!("Failed to unpack user_pool, create .default !");
         }
 
     }
