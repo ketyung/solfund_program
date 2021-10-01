@@ -15,6 +15,9 @@ use {
     crate::instruction::PoolInstruction, 
     crate::state::{FundPool,Market, UserPool},
     crate::{error::PoolError},
+    //spl_token::instruction::initialize_account;
+    spl_token::instruction::{initialize_mint},//,mint_to} 
+    //spl_token ::{ initialize_mint }
 
 };
 
@@ -142,7 +145,7 @@ fn create_fund_pool(  manager : Pubkey,
             }
 
             if *token_account.owner == spl_token::id() {
-                mint_token(token_account, token_count, token_address);
+                mint_token(signer_account, token_account, token_count, token_address);
             }
         
         }
@@ -151,9 +154,31 @@ fn create_fund_pool(  manager : Pubkey,
     Ok(())
 }
 
-fn mint_token (token_account : &AccountInfo, token_count : u64, token_address : Pubkey) {
+fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo, token_count : u64, token_address : Pubkey) {
 
-    msg!("Going to mint {} tokens by {:?}, address: {:?}", token_count, token_account.key, token_address )
+    msg!("Going to mint {} tokens by {:?}, address: {:?}", token_count, token_account.key, token_address );
+
+    let _init_mint_ins = initialize_mint(
+        &spl_token::ID,
+        &token_account.key,
+        &signer_account.key,
+        Some(signer_account.key),
+        3,
+    )
+    .unwrap();
+
+    /*
+    let _mint_to = mint_to(token_program_id: &Pubkey, 
+        mint_pubkey: &Pubkey, account_pubkey: &Pubkey, owner_pubkey: &Pubkey, signer_pubkeys: &[&Pubkey], amount: u64)(
+        &spl_token::ID,
+        &token_account.key,
+        &signer_account.key,
+        Some(signer_account.key),
+        3,
+    )
+    .unwrap(); */
+
+    
 
 }
 
