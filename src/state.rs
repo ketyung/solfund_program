@@ -144,7 +144,7 @@ impl UserPool {
 
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct PoolMarket {
+pub struct Market {
 
     pub pool_size : u16,
 
@@ -154,11 +154,11 @@ pub struct PoolMarket {
 
 pub const POOL_MARKET_SIZE_LIMIT : usize = 100;
 
-impl PoolMarket {
+impl Market {
 
     pub fn new() -> Self {
 
-        PoolMarket{
+        Market{
 
             pool_size : 0,
             
@@ -170,7 +170,7 @@ impl PoolMarket {
 
 
 
-impl PoolMarket {
+impl Market {
 
     
     pub fn add_fund_pool (&mut self,  pubkey : Pubkey){
@@ -226,9 +226,9 @@ impl PoolMarket {
 }
 
 
-impl Sealed for PoolMarket{}
+impl Sealed for Market{}
 
-impl Pack for PoolMarket {
+impl Pack for Market {
 
     const LEN: usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ;
 

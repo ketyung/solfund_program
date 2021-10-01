@@ -13,7 +13,7 @@ use {
     },
     
     crate::instruction::PoolInstruction, 
-    crate::state::{FundPool,PoolMarket, UserPool},
+    crate::state::{FundPool,Market, UserPool},
     crate::{error::PoolError},
 
 };
@@ -101,7 +101,7 @@ fn create_fund_pool(  manager : Pubkey,
 
     let fund_pool_account = next_account_info(account_info_iter)?;
     let user_pool_account = next_account_info(account_info_iter)?;
-    let market_pool_account = next_account_info(account_info_iter)?;
+    let market_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
 
 
@@ -134,9 +134,9 @@ fn create_fund_pool(  manager : Pubkey,
             }
         
            
-            if market_pool_account.owner == program_id /* && is_finalized */ {
+            if market_account.owner == program_id /* && is_finalized */ {
 
-                register_address_to_market_pool(address, market_pool_account)
+                register_address_to_market(address, market_account)
             }
         
         }
@@ -182,7 +182,7 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
     let account = next_account_info(account_info_iter)?;
     let user_pool_account = next_account_info(account_info_iter)?;
-    let market_pool_account = next_account_info(account_info_iter)?;
+    let market_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
 
 
@@ -210,9 +210,9 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
         }
         
        
-        if market_pool_account.owner == program_id  {
+        if market_account.owner == program_id  {
 
-            remove_address_from_pool_market(fund_pool.address, market_pool_account)
+            remove_address_from_market(fund_pool.address, market_account)
         }
       
 
@@ -222,19 +222,19 @@ fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResu
 
 
 
-fn register_address_to_market_pool(address : Pubkey, market_pool_account : &AccountInfo) {
+fn register_address_to_market(address : Pubkey, market_account : &AccountInfo) {
 
 
-    let market_pool = PoolMarket::unpack_unchecked(&market_pool_account.data.borrow());
+    let market = Market::unpack_unchecked(&market_account.data.borrow());
 
-    match market_pool{
+    match market{
 
         Ok(mut pool) => {
 
             //msg!("MarketPool.Registering address::...current:{:?}", pool);
             pool.add_fund_pool(address);
             
-            let _ = PoolMarket::pack(pool, &mut market_pool_account.data.borrow_mut());
+            let _ = Market::pack(pool, &mut market_account.data.borrow_mut());
 
         },
 
@@ -242,9 +242,9 @@ fn register_address_to_market_pool(address : Pubkey, market_pool_account : &Acco
 
             msg!("Failed to unpack pool market, create .default !");
 
-            let pool = PoolMarket::new();
+            let pool = Market::new();
                      
-            let _ = PoolMarket::pack(pool, &mut market_pool_account.data.borrow_mut());
+            let _ = Market::pack(pool, &mut market_account.data.borrow_mut());
 
         }
 
@@ -253,12 +253,12 @@ fn register_address_to_market_pool(address : Pubkey, market_pool_account : &Acco
 }
 
 
-fn remove_address_from_pool_market(address : Pubkey, market_pool_account : &AccountInfo)  {
+fn remove_address_from_market(address : Pubkey, market_account : &AccountInfo)  {
 
  
-    let market_pool = PoolMarket::unpack_unchecked(&market_pool_account.data.borrow());
+    let market = Market::unpack_unchecked(&market_account.data.borrow());
 
-    match market_pool{
+    match market{
 
         Ok(mut pool) => {
 
@@ -268,7 +268,7 @@ fn remove_address_from_pool_market(address : Pubkey, market_pool_account : &Acco
            // msg!("Removing address from pool market::...current: {:?}", pool);
             pool.remove_fund_pool(address);
             
-            let _ = PoolMarket::pack(pool, &mut market_pool_account.data.borrow_mut());
+            let _ = Market::pack(pool, &mut market_account.data.borrow_mut());
 
         },
 
@@ -292,16 +292,13 @@ fn register_address_to_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
 
         Ok(mut pool) => {
 
-          //  msg!("UserPool.Registering address::... current:{:?}", pool);
-            
-
+        
             if pool.user == user || pool.user == Pubkey::default()   {
 
               
                 pool.user = user;
                 pool.add_address(address);
-                // Ignore the error  
-
+        
                 let s = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
 
                 match s {
@@ -377,40 +374,3 @@ fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
     }
  
 }
-
-/*
-fn increment_counter(counter_account : &AccountInfo) {
-
-   
-    let stored_counter = Counter::unpack_unchecked(&counter_account.data.borrow());
-
-        
-    match stored_counter{
-
-        Ok(mut c) => {
-
-            msg!("Increment counter!!, curr.count::{}",c.count);
-            c.increment();
-   
-            // Ignore the error  
-
-            let _ = Counter::pack(c, &mut counter_account.data.borrow_mut());
-
-        },
-
-        Err(_) => {
-
-            msg!("Failed to unpack counter, create .default !");
-
-            let mut c = Counter::new();
-            c.increment();
-   
-            // Ignore the error  
-            let _ = Counter::pack(c, &mut counter_account.data.borrow_mut());
-
-        }
-
-    }
-   
-
-}*/
