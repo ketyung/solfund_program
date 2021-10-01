@@ -28,13 +28,13 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{manager, address, lamports, token_count, is_finalized, icon} => {
+        PoolInstruction::CreateFundPool{manager, address, token_address, lamports, token_count, is_finalized, icon} => {
 
-            create_fund_pool(manager, address, lamports, token_count, is_finalized, icon, program_id, accounts)
+            create_fund_pool(manager, address, token_address, lamports, token_count, is_finalized, icon, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{manager, address, lamports, token_count, is_finalized, icon} => {
-            update_fund_pool(manager, address, lamports, token_count, is_finalized, icon, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{manager, address, token_address,  lamports, token_count, is_finalized, icon} => {
+            update_fund_pool(manager, address,token_address, lamports, token_count, is_finalized, icon, program_id, accounts) 
         },
 
         PoolInstruction::DeleteFundPool => {
@@ -93,7 +93,8 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
 
 fn create_fund_pool(  manager : Pubkey,
-    address : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
+    address : Pubkey, token_address : Pubkey,
+    lamports : u64,token_count : u64, is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
@@ -124,6 +125,7 @@ fn create_fund_pool(  manager : Pubkey,
             w.manager = manager;
             w.icon = icon ; 
             w.address = address;
+            w.token_address = token_address;
     
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
 
@@ -146,7 +148,8 @@ fn create_fund_pool(  manager : Pubkey,
 }
 
 fn update_fund_pool(manager : Pubkey,
-    address : Pubkey, lamports : u64,token_count : u64, is_finalized : bool,
+    address : Pubkey, _token_address : Pubkey, 
+    lamports : u64,token_count : u64, is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
     let account_info_iter = &mut accounts.iter();
@@ -264,8 +267,6 @@ fn remove_address_from_market(address : Pubkey, market_account : &AccountInfo)  
 
             msg!("Going to remove addr from pool..market :{:?}, size::{}", address, pool.len());
                 
-            // Print the pool causing exceeding compute cycle, so don't do it!!
-           // msg!("Removing address from pool market::...current: {:?}", pool);
             pool.remove_fund_pool(address);
             
             let _ = Market::pack(pool, &mut market_account.data.borrow_mut());
@@ -299,8 +300,9 @@ fn register_address_to_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
                 pool.user = user;
                 pool.add_address(address);
         
-                let s = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
+                let _ = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
 
+                /*
                 match s {
 
                     Ok(p) => {
@@ -309,7 +311,7 @@ fn register_address_to_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
                     Err(e) => {
                         msg!("Error.packing manager pool :{:?}",e);
                     }
-                }
+                }*/
 
             }
    
@@ -350,8 +352,9 @@ fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
                  
                 pool.remove_address(address);
           
-                let s = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
+                let _ = UserPool::pack(pool, &mut user_pool_account.data.borrow_mut());
 
+                /*
                 match s {
 
                     Ok(p) => {
@@ -360,7 +363,8 @@ fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
                     Err(e) => {
                         msg!("Error.packing manager pool :{:?}",e);
                     }
-                }
+                }*/
+
             }
    
           

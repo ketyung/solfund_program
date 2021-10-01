@@ -1,11 +1,13 @@
+/**
+ *  CopyRight @ Christopher K Y Chee (ketyung@techchee.com)
+ */
+
 use crate::{error::PoolError};
-use crate::state::{unpack_bool}; //, PoolMarket};
+use crate::state::{unpack_bool}; 
 
 use solana_program::{
     program_error::ProgramError,
-    msg, 
-   // program_pack::{Pack},
-    pubkey::{Pubkey, PUBKEY_BYTES},
+    msg, pubkey::{Pubkey, PUBKEY_BYTES},
 };
 use arrayref::{array_ref,  array_refs};
 
@@ -19,6 +21,8 @@ pub enum PoolInstruction {
         manager : Pubkey,
 
         address : Pubkey, 
+
+        token_address : Pubkey, 
 
         lamports : u64,
 
@@ -35,6 +39,8 @@ pub enum PoolInstruction {
         manager : Pubkey,
 
         address : Pubkey, 
+
+        token_address : Pubkey, 
         
         lamports : u64,
 
@@ -95,13 +101,14 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                let (manager,address, lamports, token_count,is_finalized, icon ) = 
-                unpack_fund_pool_first_83(&rest);
+                let (manager,address,token_address, lamports, token_count,is_finalized, icon ) = 
+                unpack_fund_pool_first_115(&rest);
 
                 Self::CreateFundPool{
 
                     manager : manager,
                     address : address,
+                    token_address : token_address, 
                     lamports : lamports,
                     token_count : token_count,
                     is_finalized : is_finalized,
@@ -113,13 +120,14 @@ impl PoolInstruction{
 
             &ACTION_UPDATE => {
 
-                let (manager, address, lamports, token_count,is_finalized, icon ) = 
-                unpack_fund_pool_first_83(&rest);
+                let (manager, address,token_address, lamports, token_count,is_finalized, icon ) = 
+                unpack_fund_pool_first_115(&rest);
 
                 Self::UpdateFundPool{ 
 
                     manager : manager,
                     address : address,
+                    token_address : token_address, 
                     lamports : lamports,
                     token_count : token_count,
                     is_finalized : is_finalized,
@@ -136,16 +144,17 @@ impl PoolInstruction{
         })
     }
 }
-// [u8;32], [u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
-fn unpack_fund_pool_first_83(input : &[u8]) -> (Pubkey, Pubkey, u64, u64, bool, u16){
+// [u8;32], [u8;32],[u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
+fn unpack_fund_pool_first_115(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u64, bool, u16){
 
-    const L : usize = 83; 
+    const L : usize = 115; 
     let output = array_ref![input, 0, L];
-    let (manager,address, lamports,token_count,is_finalized,icon) = 
-    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, 8,8,1, 2 ];
+    let (manager,address, token_address,  lamports,token_count,is_finalized,icon) = 
+    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,8,8,1, 2 ];
 
     (  Pubkey::new_from_array(*manager),
     Pubkey::new_from_array(*address),
+    Pubkey::new_from_array(*token_address),
     u64::from_le_bytes(*lamports),
     u64::from_le_bytes(*token_count),
     unpack_bool(is_finalized).unwrap(),
