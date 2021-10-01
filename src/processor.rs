@@ -132,7 +132,11 @@ fn create_fund_pool(  manager : Pubkey,
     
             FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
 
-         
+            if *token_account.owner == spl_token::id() {
+                mint_token(signer_account, token_account, token_count, token_address);
+            }
+        
+
             if user_pool_account.owner == program_id  {
 
                 register_address_to_user_pool(address, manager, user_pool_account)
@@ -144,17 +148,15 @@ fn create_fund_pool(  manager : Pubkey,
                 register_address_to_market(address, market_account)
             }
 
-            if *token_account.owner == spl_token::id() {
-                mint_token(signer_account, token_account, token_count, token_address);
-            }
-        
+          
         }
     
     }
     Ok(())
 }
 
-fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo, token_count : u64, token_address : Pubkey) {
+fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo, 
+    token_count : u64, token_address : Pubkey) {
 
     msg!("Going to mint {} tokens by {:?}, address: {:?}", token_count, token_account.key, token_address );
 
