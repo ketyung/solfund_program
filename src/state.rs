@@ -1,3 +1,7 @@
+/**
+ * CopyRight ketyung@techchee.com (Christopher K Y Chee)
+ */
+
 use solana_program::{
     pubkey::{Pubkey, PUBKEY_BYTES},
     program_error::ProgramError,
