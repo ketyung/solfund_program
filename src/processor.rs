@@ -142,7 +142,7 @@ fn create_fund_pool(  manager : Pubkey,
             }
 
             if *token_account.owner == spl_token::id() {
-                mint_token(token_account, token_count);
+                mint_token(token_account, token_count, token_address);
             }
         
         }
@@ -151,9 +151,9 @@ fn create_fund_pool(  manager : Pubkey,
     Ok(())
 }
 
-fn mint_token (token_account : &AccountInfo, token_count : u64) {
+fn mint_token (token_account : &AccountInfo, token_count : u64, token_address : Pubkey) {
 
-    msg!("Going to mint {} tokens by {:?}", token_count, token_account.key )
+    msg!("Going to mint {} tokens by {:?}, address: {:?}", token_count, token_account.key, token_address )
 
 }
 
