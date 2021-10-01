@@ -173,8 +173,6 @@ fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo, toke
     //    &[signer_account.key],   )
     //.unwrap(); 
 
-    
-
 }
 
 fn update_fund_pool(manager : Pubkey,
