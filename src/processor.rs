@@ -141,7 +141,7 @@ fn create_fund_pool(  manager : Pubkey,
                 register_address_to_market(address, market_account)
             }
 
-            if *token_account.owner != spl_token::id() {
+            if *token_account.owner == spl_token::id() {
                 mint_token(token_account, token_count);
             }
         
