@@ -7,7 +7,7 @@ use crate::state::{unpack_bool};
 
 use solana_program::{
     program_error::ProgramError,
-    msg, pubkey::{Pubkey, PUBKEY_BYTES},
+    pubkey::{Pubkey, PUBKEY_BYTES},
 };
 use arrayref::{array_ref,  array_refs};
 
@@ -72,13 +72,25 @@ pub enum PoolInstruction {
         date : i64, 
 
     },
-   
+
+    CreateMarket{
+
+        creator : Pubkey, 
+    },
+
+    DeleteFromMarket{
+
+        fund_pool : Pubkey, 
+    }
 }
 
 
 const MODULE_FUND_POOL : u8 = 1;
 
 const MODULE_INVESTOR : u8 = 2;
+
+const MODULE_MARKET : u8 = 3;
+
 
 impl PoolInstruction {
 
@@ -88,13 +100,15 @@ impl PoolInstruction {
         // 1 is the FundPool
         let (module, rest) = input.split_first().ok_or(PoolError::InvalidModule)?;
         
-        msg!("Current module being accessed is :{}", module);
+       // msg!("Current module being accessed is :{}", module);
 
         Ok(match module {
 
             &MODULE_FUND_POOL => Self::unpack_fund_pool(rest)?,
 
             &MODULE_INVESTOR => Self::unpack_investor(rest)?,
+         
+            &MODULE_MARKET => Self::unpack_market(rest)?,
            
             _ => return Err(PoolError::InvalidModule.into()),
 
@@ -109,6 +123,43 @@ const ACTION_CREATE : u8  = 1;
 const ACTION_UPDATE : u8  = 2;
 
 const ACTION_DELETE : u8 = 44;
+
+impl PoolInstruction {
+
+    fn unpack_market(input : &[u8])-> Result<Self, ProgramError>{
+
+        let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
+
+        Ok(match action  {
+
+            &ACTION_CREATE => {
+
+                let output = array_ref![rest, 0, PUBKEY_BYTES];
+                let (creator,_) = array_refs![output, PUBKEY_BYTES, 0 ];
+  
+                Self::CreateMarket {
+                    creator : unpack_pub_key(creator),
+                }
+
+            },
+
+            &ACTION_DELETE => {
+
+                let output = array_ref![rest, 0, PUBKEY_BYTES];
+                let (address,_) = array_refs![output, PUBKEY_BYTES, 0 ];
+  
+                Self::DeleteFromMarket {
+                    fund_pool : unpack_pub_key(address),
+                }
+
+            },
+
+            _ => return Err(PoolError::InvalidAction.into()),
+
+        })
+    
+    }
+}
 
 impl PoolInstruction{
 
@@ -251,11 +302,9 @@ fn unpack_fund_pool_first_115(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u6
 
 
 
-/*
-// maybe needed later
 fn unpack_pub_key(array : &[u8]) -> Pubkey{
 
     let mut a : [u8; 32] = [1; 32];
     a.copy_from_slice(array);
     return Pubkey::new_from_array(a);
-}*/
+}

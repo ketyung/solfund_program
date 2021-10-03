@@ -27,6 +27,9 @@ pub enum PoolError {
     #[error("Unmatched pool address")]
     UnmatchedPoolAddress,
 
+    #[error("Unmatched creator")]
+    UnmatchedCreator,
+
 
 }
 

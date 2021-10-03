@@ -56,18 +56,27 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
             date, 
       
         } => {
-
-            add_investor(investor, 
-                pool_address, address, 
-                token_address,
-                 amount, 
+            add_investor(investor, pool_address, address, token_address,amount, 
                  token_count, date, program_id, accounts)
 
         },
+
+        PoolInstruction::CreateMarket {creator} => {
+
+            create_market(creator, program_id, accounts)
+
+        },
+
+        PoolInstruction::DeleteFromMarket {fund_pool} => {
+
+
+            delete_from_market(fund_pool, program_id, accounts)
+
+        },
+
        
     }
 
-    
 }
 
 
@@ -85,6 +94,86 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
 
 }
 
+
+fn delete_from_market( address : Pubkey, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+
+    let account_info_iter = &mut accounts.iter();
+    let market_account = next_account_info(account_info_iter)?;
+    let signer_account = next_account_info(account_info_iter)?;
+
+
+    if is_account_program_owner(program_id, market_account).unwrap() {
+
+        let stored_market = Market::unpack_unchecked(&market_account.data.borrow());
+    
+        match stored_market{
+    
+            Ok(mut s) => {
+    
+                if s.creator != *signer_account.key {
+    
+                    return Err(ProgramError::from( PoolError::UnmatchedCreator) );           
+                }
+    
+                s.remove_fund_pool(address);
+    
+                Market::pack(s, &mut market_account.data.borrow_mut())?;
+          
+            },
+    
+            Err(e) => {
+    
+                msg!("No market::error:{:?}",e);
+            } 
+            
+        }
+       
+    }
+              
+    Ok(())
+
+}
+
+
+
+fn create_market(  creator : Pubkey, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+
+    let account_info_iter = &mut accounts.iter();
+    let market_account = next_account_info(account_info_iter)?;
+    
+    if is_account_program_owner(program_id, market_account).unwrap() {
+
+        let stored_market = Market::unpack_unchecked(&market_account.data.borrow());
+   
+        match stored_market{
+
+            Ok(s) => {
+    
+                if s.creator != Pubkey::default() {
+    
+                    return Err(ProgramError::from( PoolError::ObjectAlreadyCreated) );
+                }
+            
+                let mut market = Market::new();
+                market.creator = creator;
+                Market::pack(market, &mut market_account.data.borrow_mut())?;
+    
+            },
+    
+            Err(_) => {
+    
+                let mut market = Market::new();
+                market.creator = creator;
+                Market::pack(market, &mut market_account.data.borrow_mut())?;
+            } 
+            
+        }
+    
+    }
+    Ok(())
+             
+   
+}
 
 fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError> {
 
@@ -162,7 +251,7 @@ fn create_fund_pool(  manager : Pubkey,
             }
         
            
-            if market_account.owner == program_id /* && is_finalized */ {
+            if market_account.owner == program_id && is_finalized  {
 
                 register_address_to_market(address, market_account)
             }

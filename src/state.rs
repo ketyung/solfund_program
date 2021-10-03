@@ -154,6 +154,8 @@ pub struct Market {
 
     fund_pools : Vec<Pubkey>,
 
+    pub creator : Pubkey,
+
 }
 
 pub const POOL_MARKET_SIZE_LIMIT : usize = 100;
@@ -167,6 +169,8 @@ impl Market {
             pool_size : 0,
             
             fund_pools : Vec::with_capacity(POOL_MARKET_SIZE_LIMIT),
+
+            creator : Pubkey::default(),
             
         }
     }
@@ -196,17 +200,6 @@ impl Market {
 
 
         self.fund_pools.retain(|&x| x != pubkey);
-
-        /*
-        let idx = self.fund_pools.iter().position(|&r| r == pubkey);
-        if idx.is_some() {
-
-            self.fund_pools.remove(idx.unwrap());
-            self.pool_size = self.fund_pools.len() as u16;
-
-        } 
-        */
-
     }
 
 
@@ -234,18 +227,22 @@ impl Sealed for Market{}
 
 impl Pack for Market {
 
-    const LEN: usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ;
+    const LEN: usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + PUBKEY_BYTES ;
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
 
-        const L : usize =  2+ (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT); 
+        const L : usize =  2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + PUBKEY_BYTES; 
 
         let output = array_mut_ref![dst, 0, L];
 
-        let (pools_size, pk_as_data_flat) = mut_array_refs![output, 2, (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ];
+        let (pools_size, pk_as_data_flat, creator ) = mut_array_refs![output, 2, 
+        (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT), PUBKEY_BYTES ];
 
 
         *pools_size = self.pool_size.to_le_bytes();
+        
+        creator.copy_from_slice(self.creator.as_ref());
+
 
         let mut offset = 0;
 
@@ -259,19 +256,20 @@ impl Pack for Market {
 
             offset += PUBKEY_BYTES;
         }
-
        
     }
 
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
 
-        const L : usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) ; 
+        const L : usize = 2 + (PUBKEY_BYTES * POOL_MARKET_SIZE_LIMIT) + PUBKEY_BYTES ; 
 
         let input = array_ref![src, 0, L];
         
-        let (pools_len, pools) = array_refs![input, 2, L-2 ];
+        let (pools_len, pools, creator) = array_refs![input, 2, L-34, 32 ];
 
         let pools_len = u16::from_le_bytes(*pools_len);
+
+        let creator = Pubkey::new_from_array(*creator);
 
         let mut offset = 0 ;
 
@@ -289,6 +287,7 @@ impl Pack for Market {
         Ok(Self{
             pool_size : pools_len as u16 ,
             fund_pools : new_pools,
+            creator : creator, 
         })
     }
 }
