@@ -24,6 +24,9 @@ pub enum PoolError {
     #[error("Object already created")]
     ObjectAlreadyCreated,
 
+    #[error("Unmatched pool address")]
+    UnmatchedPoolAddress,
+
 
 }
 

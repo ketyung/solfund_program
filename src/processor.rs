@@ -13,7 +13,7 @@ use {
     },
     
     crate::instruction::PoolInstruction, 
-    crate::state::{FundPool,Market, UserPool},
+    crate::state::{FundPool,Market, UserPool, Investor},
     crate::{error::PoolError},
     //spl_token::instruction::initialize_account;
     spl_token::instruction::{initialize_mint},//,mint_to} 
@@ -54,7 +54,7 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
 
 fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Result<bool, ProgramError>{
 
-    msg!("Checking acc is owner, {:?}, {:?}", account.owner, program_id);
+   // msg!("Checking acc is owner, {:?}, {:?}", account.owner, program_id);
 
     if account.owner != program_id {
 
@@ -407,4 +407,47 @@ fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
 
     }
  
+}
+
+fn add_investor(investor : Pubkey,
+    pool_address : Pubkey,token_address : Pubkey, 
+    amount : u64,token_count : u64, date : i64,
+    program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult{
+
+    let account_info_iter = &mut accounts.iter();
+
+    let investor_account = next_account_info(account_info_iter)?;
+    let fund_pool_account = next_account_info(account_info_iter)?;
+    let signer_account = next_account_info(account_info_iter)?;
+    
+
+     // check for signer
+    if !signer_account.is_signer {
+
+        return Err(ProgramError::MissingRequiredSignature);
+    }
+
+    if is_account_program_owner(program_id, investor_account).unwrap() {
+
+        let mut fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
+
+        if fp.address != pool_address{
+
+           // return Err(PoolError::UnmatchedPoolAddress);
+           return Err(ProgramError::MissingRequiredSignature);
+  
+        }
+
+        let mut i = Investor::new();
+        i.investor = investor;
+        i.amount = amount;
+        i.date = date;
+        i.pool_address = pool_address;
+        i.token_address = token_address;
+    
+        
+        
+    }
+
+    Ok(())
 }
