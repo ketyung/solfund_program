@@ -429,7 +429,7 @@ fn add_investor(investor : Pubkey,
 
     if is_account_program_owner(program_id, investor_account).unwrap() {
 
-        let mut fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
+        let fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
 
         if fp.address != pool_address{
 
@@ -445,7 +445,7 @@ fn add_investor(investor : Pubkey,
         i.pool_address = pool_address;
         i.token_address = token_address;
     
-        
+
         
     }
 
