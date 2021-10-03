@@ -55,12 +55,30 @@ pub enum PoolInstruction {
 
     DeleteFundPool ,
 
+
+    AddInvestor {
+        investor : Pubkey, 
+
+        pool_address : Pubkey, 
+    
+        address : Pubkey,
+    
+        amount : u64, 
+    
+        token_address : Pubkey,
+    
+        token_count : u64,
+      
+        date : i64, 
+
+    },
    
 }
 
 
 const MODULE_FUND_POOL : u8 = 1;
 
+const MODULE_INVESTOR : u8 = 2;
 
 impl PoolInstruction {
 
@@ -76,6 +94,8 @@ impl PoolInstruction {
 
             &MODULE_FUND_POOL => Self::unpack_fund_pool(rest)?,
 
+            &MODULE_INVESTOR => Self::unpack_investor(rest)?,
+           
             _ => return Err(PoolError::InvalidModule.into()),
 
         })
@@ -144,6 +164,74 @@ impl PoolInstruction{
         })
     }
 }
+
+impl PoolInstruction {
+
+    fn unpack_investor(input : &[u8])-> Result<Self, ProgramError>{
+
+        let (action,rest) = input.split_first().ok_or(PoolError::InvalidInstruction)?;
+
+        Ok(match action  {
+
+            &ACTION_CREATE => {
+
+                let (
+                    investor, 
+                    pool_address, 
+                    address,
+                    token_address,
+                    amount, 
+                    token_count,
+                    date, 
+                ) =  unpack_investor_data(&rest);
+
+                Self::AddInvestor{
+
+                    investor : investor, 
+                    pool_address :pool_address, 
+                    address : address,
+                    token_address : token_address,
+                    amount : amount, 
+                    token_count : token_count,
+                    date : date , 
+                }
+
+            },
+
+            _ => return Err(PoolError::InvalidAction.into()),
+
+        })
+    }
+
+}
+
+
+fn unpack_investor_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, Pubkey, u64, u64, i64){
+
+    const L : usize = 152; 
+    let output = array_ref![input, 0, L];
+    let (
+        investor, 
+        pool_address, 
+        address,
+        token_address,
+        amount, 
+        token_count,
+        date, 
+    ) = 
+    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,PUBKEY_BYTES,8,8,8 ];
+
+    (  Pubkey::new_from_array(*investor),
+    Pubkey::new_from_array(*pool_address),
+    Pubkey::new_from_array(*address),
+    Pubkey::new_from_array(*token_address),
+    u64::from_le_bytes(*amount),
+    u64::from_le_bytes(*token_count),
+    i64::from_le_bytes(*date))
+
+}
+
+
 // [u8;32], [u8;32],[u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
 fn unpack_fund_pool_first_115(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u64, bool, u16){
 

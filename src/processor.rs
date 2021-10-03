@@ -46,6 +46,25 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
 
         },
        
+        PoolInstruction::AddInvestor{
+            investor, 
+            pool_address, 
+            address,
+            token_address,
+            amount, 
+            token_count,
+            date, 
+      
+        } => {
+
+            add_investor(investor, 
+                pool_address, address, 
+                token_address,
+                 amount, 
+                 token_count, date, program_id, accounts)
+
+        },
+       
     }
 
     
@@ -410,7 +429,9 @@ fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
 }
 
 fn add_investor(investor : Pubkey,
-    pool_address : Pubkey,token_address : Pubkey, 
+    pool_address : Pubkey,
+    address : Pubkey, 
+    token_address : Pubkey, 
     amount : u64,token_count : u64, date : i64,
     program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult{
 
@@ -429,25 +450,31 @@ fn add_investor(investor : Pubkey,
 
     if is_account_program_owner(program_id, investor_account).unwrap() {
 
-        let fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
+        let mut fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
 
         if fp.address != pool_address{
 
-           // return Err(PoolError::UnmatchedPoolAddress);
-           return Err(ProgramError::MissingRequiredSignature);
-  
+           return Err( ProgramError::from( PoolError::UnmatchedPoolAddress) );
         }
 
         let mut i = Investor::new();
         i.investor = investor;
         i.amount = amount;
         i.date = date;
+        i.token_count = token_count;
+        i.address = address;
         i.pool_address = pool_address;
         i.token_address = token_address;
     
 
+        let ii = i.clone();
+
+        let _ = Investor::pack(i, &mut investor_account.data.borrow_mut());
+
+        let _ = fp.register_investor(ii);
         
     }
 
     Ok(())
 }
+
