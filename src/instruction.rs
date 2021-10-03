@@ -78,6 +78,11 @@ pub enum PoolInstruction {
         creator : Pubkey, 
     },
 
+    RegisterToMarket{
+
+        fund_pool : Pubkey, 
+    },
+
     DeleteFromMarket{
 
         fund_pool : Pubkey, 
@@ -122,6 +127,8 @@ const ACTION_CREATE : u8  = 1;
 
 const ACTION_UPDATE : u8  = 2;
 
+const ACTION_REGISTER : u8 = 3;
+
 const ACTION_DELETE : u8 = 44;
 
 impl PoolInstruction {
@@ -140,8 +147,19 @@ impl PoolInstruction {
                 Self::CreateMarket {
                     creator : unpack_pub_key(creator),
                 }
+            },
+
+            &ACTION_REGISTER => {
+
+                let output = array_ref![rest, 0, PUBKEY_BYTES];
+                let (address,_) = array_refs![output, PUBKEY_BYTES, 0 ];
+  
+                Self::RegisterToMarket {
+                    fund_pool : unpack_pub_key(address),
+                }
 
             },
+
 
             &ACTION_DELETE => {
 

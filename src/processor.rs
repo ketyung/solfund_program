@@ -64,11 +64,16 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
         PoolInstruction::CreateMarket {creator} => {
 
             create_market(creator, program_id, accounts)
+        },
+
+
+        PoolInstruction::RegisterToMarket {fund_pool} => {
+
+            register_to_market(fund_pool, program_id, accounts)
 
         },
 
         PoolInstruction::DeleteFromMarket {fund_pool} => {
-
 
             delete_from_market(fund_pool, program_id, accounts)
 
@@ -91,6 +96,45 @@ fn is_account_program_owner(program_id : &Pubkey, account : &AccountInfo) -> Res
     }
 
     Ok(true)
+
+}
+
+fn register_to_market( address : Pubkey, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
+
+    let account_info_iter = &mut accounts.iter();
+    let market_account = next_account_info(account_info_iter)?;
+    let signer_account = next_account_info(account_info_iter)?;
+
+
+    if is_account_program_owner(program_id, market_account).unwrap() {
+
+        let stored_market = Market::unpack_unchecked(&market_account.data.borrow());
+    
+        match stored_market{
+    
+            Ok(mut s) => {
+    
+                if s.creator != *signer_account.key {
+    
+                    return Err(ProgramError::from( PoolError::UnmatchedCreator) );           
+                }
+    
+                s.add_fund_pool(address);
+
+                Market::pack(s, &mut market_account.data.borrow_mut())?;
+          
+            },
+    
+            Err(e) => {
+    
+                msg!("No market::error:{:?}",e);
+            } 
+            
+        }
+       
+    }
+              
+    Ok(())
 
 }
 
