@@ -617,6 +617,95 @@ impl FundPool {
 }
 
 
+#[derive(Clone, Debug, PartialEq)]
+pub struct Investor {
+
+    pub investor : Pubkey, 
+
+    pub pool_address : Pubkey, 
+
+    pub amount : u64, 
+
+    pub token_address : Pubkey,
+
+    pub token_count : u64,
+  
+    pub date : UnixTimestamp, 
+
+}
+
+impl Investor {
+
+    pub fn new() -> Self {
+
+        Investor {
+            investor : Pubkey::default(),
+            pool_address : Pubkey::default(),
+            amount : 0,
+            token_address : Pubkey::default(),
+            token_count : 0,
+            date : Clock::get().unwrap().unix_timestamp, 
+        }
+    }
+}
+
+impl Sealed for Investor {}
+
+
+const INVESTOR_DATA_SIZE : usize = PUBKEY_BYTES + PUBKEY_BYTES + 8 + PUBKEY_BYTES + 8 + 8;
+
+impl Pack for Investor {
+
+    const LEN: usize = INVESTOR_DATA_SIZE;
+
+    fn pack_into_slice(&self, dst: &mut [u8]) {
+
+        let output = array_mut_ref![dst, 0, INVESTOR_DATA_SIZE];
+       
+        let (investor,pool_address,amount,token_address,token_count, date) = 
+        mut_array_refs![ output,PUBKEY_BYTES,PUBKEY_BYTES,8,PUBKEY_BYTES, 8, 8];
+
+
+        investor.copy_from_slice(self.investor.as_ref());
+        pool_address.copy_from_slice(self.pool_address.as_ref());
+        *token_count = self.token_count.to_le_bytes();
+        *amount = self.amount.to_le_bytes();
+        token_address.copy_from_slice(self.token_address.as_ref());
+        *date = self.date.to_le_bytes();
+
+    }
+
+    fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
+   
+        let input = array_ref![src, 0, INVESTOR_DATA_SIZE];
+       
+        let (investor,pool_address,amount,token_address,token_count, date)  =
+
+        array_refs![input, PUBKEY_BYTES, PUBKEY_BYTES, 8, PUBKEY_BYTES, 8, 8 ];
+
+        let investor = Pubkey::new_from_array(*investor);
+        let pool_address = Pubkey::new_from_array(*pool_address);
+        let token_address = Pubkey::new_from_array(*token_address);
+        let amount = u64::from_le_bytes(*amount);
+        let token_count = u64::from_le_bytes(*token_count);
+        let date = i64::from_le_bytes(*date);
+
+        Ok( Investor{
+
+            investor : investor,
+            pool_address : pool_address,
+            token_address : token_address,
+            amount :amount, 
+            token_count : token_count,
+            date : date, 
+        })
+    }
+}
+
+
+
+
+
 
 fn pack_bool(boolean: bool, dst: &mut [u8; 1]) {
     *dst = (boolean as u8).to_le_bytes()
