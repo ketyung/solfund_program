@@ -311,7 +311,7 @@ fn unpack_investor_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, Pubkey, u64, 
 }
 
 
-// [u8;32], [u8;32],[u8;32], [u8;8], [u8;8] , [u8;1], [u8;2] 
+// [u8;32], [u8;32],[u8;32], [u8;8], [u8;8] ,[u8;8] , [u8;1], [u8;2] 
 fn unpack_fund_pool_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u64, u64,  bool, u16){
 
     const L : usize = 123; 
