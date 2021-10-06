@@ -15,7 +15,7 @@ use crate::{error::PoolError};
 use std::convert::{TryFrom};
 
 
-pub const MANAGER_POOL_SIZE_LIMIT : usize = 10;
+pub const MANAGER_POOL_SIZE_LIMIT : usize = 50;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UserPool {
