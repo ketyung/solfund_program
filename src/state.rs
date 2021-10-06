@@ -301,7 +301,7 @@ pub struct FundPoolInvestor {
 
     pub address : Pubkey,
    
-    pub amount : u64, 
+    pub token_count : u64, 
 
     pub date : UnixTimestamp, 
 }
@@ -401,14 +401,14 @@ impl Pack for FundPool {
 
             let (address,
                 investor, 
-                amount, 
+                token_count, 
                 date) = 
                 mut_array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES, 8, 8];
 
             address.copy_from_slice(iv.address.as_ref());
             investor.copy_from_slice(iv.investor.as_ref());
             *date = iv.date.to_le_bytes();
-            *amount = iv.amount.to_le_bytes();
+            *token_count = iv.token_count.to_le_bytes();
             
 
             offset += FUND_POOL_INVESTOR_LEN;
@@ -420,12 +420,12 @@ impl Pack for FundPool {
 
             let wd_flat = array_mut_ref![wd_data_flat, offset, FUND_POOL_INVESTOR_LEN];
 
-            let (address,investor,amount, date) = mut_array_refs![wd_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+            let (address,investor,token_count,date) = mut_array_refs![wd_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
             address.copy_from_slice(wd.address.as_ref());
             investor.copy_from_slice(wd.investor.as_ref());
             *date = wd.date.to_le_bytes();
-            *amount = wd.amount.to_le_bytes();
+            *token_count = wd.token_count.to_le_bytes();
           
             offset += FUND_POOL_INVESTOR_LEN;
 
@@ -468,14 +468,14 @@ impl Pack for FundPool {
 
             let iv_flat = array_ref![invs_flat, offset, FUND_POOL_INVESTOR_LEN];
 
-            let (address,investor,amount, date) = array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+            let (address,investor,token_count, date) = array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
             invs.push(
 
                 FundPoolInvestor{ 
                     investor : Pubkey::new_from_array(*investor), 
                     address :Pubkey::new_from_array(*address), 
-                    amount : u64::from_le_bytes(*amount), 
+                    token_count : u64::from_le_bytes(*token_count), 
                     date : i64::from_le_bytes(*date), 
                 }
 
@@ -493,7 +493,7 @@ impl Pack for FundPool {
             let wd_flat = array_ref![wds_flat, offset, FUND_POOL_INVESTOR_LEN];
 
             #[allow(clippy::ptr_offset_with_cast)]
-            let (add,inv,amt, dt) = array_refs![wd_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+            let (add,inv,tkc, dt) = array_refs![wd_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
             
             wds.push(
@@ -501,7 +501,7 @@ impl Pack for FundPool {
                 FundPoolInvestor{ 
                     investor : Pubkey::new_from_array(*inv), 
                     address :Pubkey::new_from_array(*add), 
-                    amount : u64::from_le_bytes(*amt), 
+                    token_count : u64::from_le_bytes(*tkc), 
                     date : i64::from_le_bytes(*dt), 
                 }
 
@@ -572,7 +572,7 @@ impl FundPool {
 
                 investor : investor.investor,
                 address : investor.address,
-                amount : investor.amount,
+                token_count : investor.token_count,
                 date : investor.date, 
             }
 
