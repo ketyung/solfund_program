@@ -334,8 +334,12 @@ pub struct FundPool {
     pub token_address : Pubkey,
 
     pub lamports : u64,
-
+   
     pub token_count : u64,
+
+    pub rm_token_count : u64, 
+
+    pub token_to_lamport_ratio : u64, 
 
     pub is_finalized : bool,
 
@@ -354,7 +358,7 @@ impl Sealed for FundPool {}
 // 1 + 32 + 32 + 32 + 8 + 8 + 1 + ((32 + 32 + 8) * FUND_POOL_INVESTOR_LIMIT)
 // (32 + 32 + 8 + 8) * + FUND_POOL_WITHDRAWER_LIMIT
 // 84 + 2 // for the two lengths 
-const FUND_POOL_LENGTH : usize = 116 + 
+const FUND_POOL_LENGTH : usize = 132 + 
 (80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT)  + 2; 
 
 impl Pack for FundPool {
@@ -366,10 +370,11 @@ impl Pack for FundPool {
         let output = array_mut_ref![dst, 0, FUND_POOL_LENGTH];
        
         let (is_initialized,manager, address, token_address, lamports, 
-        token_count,is_finalized,icon,ivs_len, 
+        token_count,rm_token_count, token_to_lamport_ratio, 
+        is_finalized,icon,ivs_len, 
         wds_len,iv_data_flat,wd_data_flat) = 
         mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
-        8, 8,1,2,1,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
+        8, 8,8,8,1,2,1,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
         FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT];
 
     
@@ -379,6 +384,8 @@ impl Pack for FundPool {
         token_address.copy_from_slice(self.token_address.as_ref());
         *lamports = self.lamports.to_le_bytes();
         *token_count = self.token_count.to_le_bytes();
+        *rm_token_count = self.rm_token_count.to_le_bytes();
+        *token_to_lamport_ratio = self.token_to_lamport_ratio.to_le_bytes();
         *icon = self.icon.to_le_bytes();
         pack_bool(self.is_finalized, is_finalized);
        
@@ -432,11 +439,12 @@ impl Pack for FundPool {
         let input = array_ref![src, 0, FUND_POOL_LENGTH];
        
         let (is_initialized,manager, address, token_address, lamports, 
-            token_count,is_finalized, icon, invs_len, wds_len, invs_flat,wds_flat) =
+            token_count,rm_token_count, token_to_lamport_ratio,
+            is_finalized, icon, invs_len, wds_len, invs_flat,wds_flat) =
 
         array_refs![input, 
         1, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,
-        8, 8, 1, 2, 1,1, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
+        8, 8, 8,8, 1, 2, 1,1, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
         (FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT)];
 
         let is_init = unpack_bool(is_initialized).unwrap();
@@ -446,6 +454,8 @@ impl Pack for FundPool {
         let tk_addr = Pubkey::new_from_array(*token_address);
         let lp = u64::from_le_bytes(*lamports);
         let tkc = u64::from_le_bytes(*token_count);
+        let rm_tkc = u64::from_le_bytes(*rm_token_count);
+        let tk_ratio = u64::from_le_bytes(*token_to_lamport_ratio);
         let ic = u16::from_le_bytes(*icon);
     
         
@@ -508,6 +518,8 @@ impl Pack for FundPool {
             token_address : tk_addr,
             lamports : lp,
             token_count : tkc,
+            rm_token_count: rm_tkc,
+            token_to_lamport_ratio : tk_ratio, 
             is_finalized : is_final,
             icon : ic, 
             investors : invs,
@@ -537,6 +549,8 @@ impl FundPool {
             token_address : Pubkey::default(), 
             lamports : 0,
             token_count : 0,
+            rm_token_count : 0,
+            token_to_lamport_ratio : 0, 
             is_finalized : false,
             icon : 0,
             investors : Vec::with_capacity(FUND_POOL_INVESTOR_LIMIT),

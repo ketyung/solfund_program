@@ -31,13 +31,13 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{manager, address, token_address, lamports, token_count, is_finalized, icon} => {
+        PoolInstruction::CreateFundPool{manager, address, token_address, lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
 
-            create_fund_pool(manager, address, token_address, lamports, token_count, is_finalized, icon, program_id, accounts)
+            create_fund_pool(manager, address, token_address, lamports, token_count,  token_to_lamport_ratio,  is_finalized, icon, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{manager, address, token_address,  lamports, token_count, is_finalized, icon} => {
-            update_fund_pool(manager, address,token_address, lamports, token_count, is_finalized, icon, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{manager, address, token_address,  lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
+            update_fund_pool(manager, address,token_address, lamports, token_count, token_to_lamport_ratio,  is_finalized, icon, program_id, accounts) 
         },
 
         PoolInstruction::DeleteFundPool => {
@@ -249,7 +249,9 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
 fn create_fund_pool(  manager : Pubkey,
     address : Pubkey, token_address : Pubkey,
-    lamports : u64,token_count : u64, is_finalized : bool,
+    lamports : u64,token_count : u64, 
+    token_to_lamport_ratio : u64, 
+    is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
@@ -276,6 +278,7 @@ fn create_fund_pool(  manager : Pubkey,
             let mut w = FundPool::new(true);
             w.is_finalized = is_finalized;
             w.token_count = token_count;
+            w.token_to_lamport_ratio = token_to_lamport_ratio; 
             w.lamports = lamports;
             w.manager = manager;
             w.icon = icon ; 
@@ -331,7 +334,9 @@ fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo,
 
 fn update_fund_pool(manager : Pubkey,
     address : Pubkey, _token_address : Pubkey, 
-    lamports : u64,token_count : u64, is_finalized : bool,
+    lamports : u64,token_count : u64, 
+    token_to_lamport_ratio : u64, 
+    is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
     let account_info_iter = &mut accounts.iter();
@@ -344,6 +349,7 @@ fn update_fund_pool(manager : Pubkey,
 
         if w.manager == manager && w.address == address {
             w.token_count = token_count;
+            w.token_to_lamport_ratio = token_to_lamport_ratio; 
             w.is_finalized = is_finalized;
             w.lamports = lamports;
             w.icon = icon;
