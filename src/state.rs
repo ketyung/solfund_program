@@ -15,7 +15,7 @@ use crate::{error::PoolError};
 use std::convert::{TryFrom};
 
 
-pub const MANAGER_POOL_SIZE_LIMIT : usize = 50;
+pub const USER_POOL_SIZE_LIMIT : usize = 50;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct UserPool {
@@ -34,7 +34,7 @@ impl UserPool {
 
             user : Pubkey::default(),
             
-            addresses : Vec::with_capacity(MANAGER_POOL_SIZE_LIMIT),
+            addresses : Vec::with_capacity(USER_POOL_SIZE_LIMIT),
             
         }
     }
@@ -44,16 +44,16 @@ impl Sealed for UserPool{}
 
 impl Pack for UserPool {
 
-    const LEN: usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ;
+    const LEN: usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * USER_POOL_SIZE_LIMIT) ;
 
     fn pack_into_slice(&self, dst: &mut [u8]) {
 
-        const L : usize =  PUBKEY_BYTES + 1 + (PUBKEY_BYTES *  MANAGER_POOL_SIZE_LIMIT); 
+        const L : usize =  PUBKEY_BYTES + 1 + (PUBKEY_BYTES *  USER_POOL_SIZE_LIMIT); 
 
         let output = array_mut_ref![dst, 0, L];
 
         let (user,addrs_len, addr_as_data_flat) = 
-        mut_array_refs![output, PUBKEY_BYTES, 1, (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ];
+        mut_array_refs![output, PUBKEY_BYTES, 1, (PUBKEY_BYTES * USER_POOL_SIZE_LIMIT) ];
 
         
         *addrs_len = u8::try_from(self.addresses.len()).unwrap().to_le_bytes();
@@ -78,12 +78,12 @@ impl Pack for UserPool {
 
     fn unpack_from_slice(src: &[u8]) -> Result<Self, ProgramError> {
 
-        const L : usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ; 
+        const L : usize = PUBKEY_BYTES + 1 + (PUBKEY_BYTES * USER_POOL_SIZE_LIMIT) ; 
 
         let input = array_ref![src, 0, L];
         
         let (user, addr_len, pools) = array_refs![input, PUBKEY_BYTES ,1, 
-        (PUBKEY_BYTES * MANAGER_POOL_SIZE_LIMIT) ];
+        (PUBKEY_BYTES * USER_POOL_SIZE_LIMIT) ];
 
         let addr_len = u8::from_le_bytes(*addr_len);
 
@@ -112,7 +112,7 @@ impl UserPool {
 
     pub fn add_address (&mut self,  pubkey : Pubkey){
 
-        if self.addresses.len() < MANAGER_POOL_SIZE_LIMIT  {
+        if self.addresses.len() < USER_POOL_SIZE_LIMIT  {
 
             if !self.addresses.contains(&pubkey){
 
