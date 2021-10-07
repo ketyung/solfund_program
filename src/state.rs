@@ -592,6 +592,9 @@ impl FundPool {
                 //msg!("Current date time:: {}", inv.date);
 
                 self.investors.push(inv);
+
+                //msg!("investors.count::{}", self.investors.len());
+                
                 return Ok(true);
             }
 

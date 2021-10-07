@@ -619,6 +619,8 @@ fn add_investor(investor : Pubkey,
         return Err( ProgramError::from( PoolError::UnmatchedPoolAddress) );
     }
 
+    //msg!("fp.address:{:?}", fp.address);
+
     if *investor_account.key != address {
 
         return Err( ProgramError::from( PoolError::UnmatchedInvestorAccountAddress) );
@@ -635,7 +637,8 @@ fn add_investor(investor : Pubkey,
     i.pool_address = pool_address;
     i.token_address = token_address;
 
-    fp.rm_token_count = fp.rm_token_count - token_count;
+   
+ //   msg!("fp.rm_token_count::{}",fp.rm_token_count);
 
 /*
 The lamports field might need to be ommited, temporary keep it here first
@@ -663,11 +666,14 @@ ketyung@techchee.com
     )?;
 
     
-    let ii = i.clone();
+    let inv = i.clone();
 
     let _ = Investor::pack(i, &mut investor_account.data.borrow_mut());
 
-    let _ = fp.register_investor(ii);
+    fp.rm_token_count = fp.rm_token_count - token_count;
+    let _ = fp.register_investor(inv);//
+    let _ = FundPool::pack(fp, &mut fund_pool_account.data.borrow_mut());
+
 
     register_address_to_user_pool(address, investor, investor_pool_account);
 
