@@ -637,6 +637,7 @@ fn add_investor(investor : Pubkey,
     i.pool_address = pool_address;
     i.token_address = token_address;
 
+   // msg!("i.investor::{:?}, i.address:{:?}", i.investor, i.address);
    
  //   msg!("fp.rm_token_count::{}",fp.rm_token_count);
 
