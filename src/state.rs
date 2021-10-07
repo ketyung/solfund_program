@@ -589,7 +589,7 @@ impl FundPool {
                 let mut inv = investor;
 
                 inv.date = Clock::get().unwrap().unix_timestamp;
-                msg!("Current date time:: {}", inv.date);
+                //msg!("Current date time:: {}", inv.date);
 
                 self.investors.push(inv);
                 return Ok(true);

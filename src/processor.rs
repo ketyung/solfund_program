@@ -593,73 +593,83 @@ fn add_investor(investor : Pubkey,
 
         return Err(ProgramError::MissingRequiredSignature);
     }
-
-    if is_account_program_owner(program_id, investor_account).unwrap() {
-
-       
-        let mut fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
-
-        if fp.address != pool_address{
-
-           return Err( ProgramError::from( PoolError::UnmatchedPoolAddress) );
-        }
-
-        if *investor_account.key != address {
-
-            return Err( ProgramError::from( PoolError::UnmatchedInvestorAccountAddress) );
-
-        }
-
-
-        let mut i = Investor::new();
-        i.investor = investor;
-        i.amount = amount;
-        i.date = date;
-        i.token_count = token_count;
-        i.address = address;
-        i.pool_address = pool_address;
-        i.token_address = token_address;
     
-        fp.rm_token_count = fp.rm_token_count - token_count;
-   
-    /*
-    The lamports field might need to be ommited, temporary keep it here first
-    ketyung@techchee.com 
-    */
-    //    let fpa = fund_pool_account.clone();
-    //    let lamports: & u64 = & fpa.lamports.borrow();
-    //    fp.lamports = *lamports;
+    // check each account if belongs program 
 
+    if investor_account.owner != program_id {
 
-        let token_to_lamport_ratio = fp.token_to_lamport_ratio;
-        let amount_in_lamports = token_to_lamport_ratio * token_count;
-
-        msg!("Amount to tx in SOL ::{}", 
-        amount_in_lamports / solana_program::native_token::LAMPORTS_PER_SOL);
-
-
-        invoke(
-            &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
-            &[
-                signer_account.clone(),
-                fund_pool_account.clone(),
-                system_program.clone(),
-            ],
-        )?;
-
-       
-
-
-        let ii = i.clone();
-
-        let _ = Investor::pack(i, &mut investor_account.data.borrow_mut());
-
-        let _ = fp.register_investor(ii);
-
-        register_address_to_user_pool(address, investor, investor_pool_account);
-
-        
+        return Err(ProgramError::IncorrectProgramId);
     }
+
+    if investor_pool_account.owner != program_id {
+
+        return Err(ProgramError::IncorrectProgramId);
+    }
+
+    if fund_pool_account.owner != program_id {
+
+        return Err(ProgramError::IncorrectProgramId);   
+    }
+
+    
+    let mut fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
+
+    if fp.address != pool_address{
+
+        return Err( ProgramError::from( PoolError::UnmatchedPoolAddress) );
+    }
+
+    if *investor_account.key != address {
+
+        return Err( ProgramError::from( PoolError::UnmatchedInvestorAccountAddress) );
+
+    }
+
+
+    let mut i = Investor::new();
+    i.investor = investor;
+    i.amount = amount;
+    i.date = date;
+    i.token_count = token_count;
+    i.address = address;
+    i.pool_address = pool_address;
+    i.token_address = token_address;
+
+    fp.rm_token_count = fp.rm_token_count - token_count;
+
+/*
+The lamports field might need to be ommited, temporary keep it here first
+ketyung@techchee.com 
+*/
+//    let fpa = fund_pool_account.clone();
+//    let lamports: & u64 = & fpa.lamports.borrow();
+//    fp.lamports = *lamports;
+
+
+    let token_to_lamport_ratio = fp.token_to_lamport_ratio;
+    let amount_in_lamports = token_to_lamport_ratio * token_count;
+
+    //  msg!("Amount to tx in SOL ::{}", 
+    //  amount_in_lamports / solana_program::native_token::LAMPORTS_PER_SOL);
+
+
+    invoke(
+        &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
+        &[
+            signer_account.clone(),
+            fund_pool_account.clone(),
+            system_program.clone(),
+        ],
+    )?;
+
+    
+    let ii = i.clone();
+
+    let _ = Investor::pack(i, &mut investor_account.data.borrow_mut());
+
+    let _ = fp.register_investor(ii);
+
+    register_address_to_user_pool(address, investor, investor_pool_account);
 
     Ok(())
 }
