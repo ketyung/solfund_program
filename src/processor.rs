@@ -600,6 +600,13 @@ fn add_investor(investor : Pubkey,
            return Err( ProgramError::from( PoolError::UnmatchedPoolAddress) );
         }
 
+        if *investor_account.key != address {
+
+            return Err( ProgramError::from( PoolError::UnmatchedInvestorAccountAddress) );
+
+        }
+
+
         let mut i = Investor::new();
         i.investor = investor;
         i.amount = amount;

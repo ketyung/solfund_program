@@ -30,6 +30,9 @@ pub enum PoolError {
     #[error("Unmatched creator")]
     UnmatchedCreator,
 
+    #[error("Unmatched investor account address")]
+    UnmatchedInvestorAccountAddress,
+
 
 }
 
