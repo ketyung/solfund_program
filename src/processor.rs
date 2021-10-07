@@ -1,3 +1,6 @@
+/**
+ *  CopyRight @ Christopher K Y Chee (ketyung@techchee.com)
+ */
 use {
     solana_program::{
         account_info::{next_account_info, AccountInfo},
@@ -618,8 +621,13 @@ fn add_investor(investor : Pubkey,
         i.token_address = token_address;
     
         fp.rm_token_count = fp.rm_token_count - token_count;
-    //        let fpa = fund_pool_account.clone();
-    //      let lamports: & u64 = & fpa.lamports.borrow();
+   
+    /*
+    The lamports field might need to be ommited, temporary keep it here first
+    ketyung@techchee.com 
+    */
+    //    let fpa = fund_pool_account.clone();
+    //    let lamports: & u64 = & fpa.lamports.borrow();
     //    fp.lamports = *lamports;
 
 
