@@ -618,9 +618,9 @@ fn add_investor(investor : Pubkey,
         i.token_address = token_address;
     
         fp.rm_token_count = fp.rm_token_count - token_count;
-        let fpa = fund_pool_account.clone();
-        let lamports: & u64 = & fpa.lamports.borrow();
-        fp.lamports = *lamports;
+    //        let fpa = fund_pool_account.clone();
+    //      let lamports: & u64 = & fpa.lamports.borrow();
+    //    fp.lamports = *lamports;
 
 
         let token_to_lamport_ratio = fp.token_to_lamport_ratio;
