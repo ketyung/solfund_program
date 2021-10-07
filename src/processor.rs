@@ -617,6 +617,7 @@ fn add_investor(investor : Pubkey,
         i.pool_address = pool_address;
         i.token_address = token_address;
     
+        fp.rm_token_count = fp.rm_token_count - token_count;
 
         let token_to_lamport_ratio = fp.token_to_lamport_ratio;
         let amount_in_lamports = token_to_lamport_ratio * token_count;
