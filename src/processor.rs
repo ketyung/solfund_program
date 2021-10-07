@@ -578,6 +578,7 @@ fn add_investor(investor : Pubkey,
     let account_info_iter = &mut accounts.iter();
 
     let investor_account = next_account_info(account_info_iter)?;
+    let investor_pool_account = next_account_info(account_info_iter)?;
     let fund_pool_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
@@ -591,6 +592,7 @@ fn add_investor(investor : Pubkey,
 
     if is_account_program_owner(program_id, investor_account).unwrap() {
 
+       
         let mut fp = FundPool::unpack_unchecked(&fund_pool_account.data.borrow())?;
 
         if fp.address != pool_address{
@@ -632,7 +634,7 @@ fn add_investor(investor : Pubkey,
 
         let _ = fp.register_investor(ii);
 
-    
+        register_address_to_user_pool(address, investor, investor_pool_account);
 
         
     }
