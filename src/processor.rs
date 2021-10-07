@@ -279,6 +279,7 @@ fn create_fund_pool(  manager : Pubkey,
             let mut w = FundPool::new(true);
             w.is_finalized = is_finalized;
             w.token_count = token_count;
+            w.rm_token_count = token_count;
             w.token_to_lamport_ratio = token_to_lamport_ratio; 
             w.lamports = lamports;
             w.manager = manager;
