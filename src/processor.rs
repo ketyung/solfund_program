@@ -6,7 +6,8 @@ use {
         pubkey::Pubkey,
         program_error::ProgramError,
         program_pack::{Pack},
-        //program::{invoke},
+        system_instruction,
+        program::{invoke},
         // system_instruction,
        // instruction::{AccountMeta},
        // system_program,
@@ -579,7 +580,8 @@ fn add_investor(investor : Pubkey,
     let investor_account = next_account_info(account_info_iter)?;
     let fund_pool_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
-    
+    let system_program = next_account_info(account_info_iter)?;
+       
 
      // check for signer
     if !signer_account.is_signer {
@@ -606,11 +608,32 @@ fn add_investor(investor : Pubkey,
         i.token_address = token_address;
     
 
+        let token_to_lamport_ratio = fp.token_to_lamport_ratio;
+        let amount_in_lamports = token_to_lamport_ratio * token_count;
+
+        msg!("Amount to tx in SOL ::{}", 
+        amount_in_lamports / solana_program::native_token::LAMPORTS_PER_SOL);
+
+
+        invoke(
+            &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
+            &[
+                signer_account.clone(),
+                fund_pool_account.clone(),
+                system_program.clone(),
+            ],
+        )?;
+
+
+
         let ii = i.clone();
 
         let _ = Investor::pack(i, &mut investor_account.data.borrow_mut());
 
         let _ = fp.register_investor(ii);
+
+    
+
         
     }
 
