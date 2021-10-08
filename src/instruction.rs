@@ -27,7 +27,7 @@ pub enum PoolInstruction {
 
         token_address : Pubkey, 
 
-        lamports : u64,
+        fee_in_lamports : u64,
 
         token_count : u64, 
 
@@ -47,7 +47,7 @@ pub enum PoolInstruction {
 
         token_address : Pubkey, 
         
-        lamports : u64,
+        fee_in_lamports : u64,
 
         token_count : u64, 
 
@@ -205,7 +205,7 @@ impl PoolInstruction{
                     manager : manager,
                     address : address,
                     token_address : token_address, 
-                    lamports : lamports,
+                    fee_in_lamports : lamports,
                     token_count : token_count,
                     token_to_lamport_ratio : token_to_lamport_ratio, 
                     is_finalized : is_finalized,
@@ -225,7 +225,7 @@ impl PoolInstruction{
                     manager : manager,
                     address : address,
                     token_address : token_address, 
-                    lamports : lamports,
+                    fee_in_lamports : lamports,
                     token_count : token_count,
                     token_to_lamport_ratio : token_to_lamport_ratio, 
                     is_finalized : is_finalized,

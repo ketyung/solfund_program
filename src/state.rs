@@ -333,7 +333,10 @@ pub struct FundPool {
 
     pub token_address : Pubkey,
 
-    pub lamports : u64,
+    // the commission
+    // currently supports flat rate commission
+    // for fund manager only in SOL
+    pub fee_in_lamports : u64,
    
     pub token_count : u64,
 
@@ -382,7 +385,7 @@ impl Pack for FundPool {
         manager.copy_from_slice(self.manager.as_ref());
         address.copy_from_slice(self.address.as_ref());
         token_address.copy_from_slice(self.token_address.as_ref());
-        *lamports = self.lamports.to_le_bytes();
+        *lamports = self.fee_in_lamports.to_le_bytes();
         *token_count = self.token_count.to_le_bytes();
         *rm_token_count = self.rm_token_count.to_le_bytes();
         *token_to_lamport_ratio = self.token_to_lamport_ratio.to_le_bytes();
@@ -516,7 +519,7 @@ impl Pack for FundPool {
             manager : mgr,
             address : addr,
             token_address : tk_addr,
-            lamports : lp,
+            fee_in_lamports : lp,
             token_count : tkc,
             rm_token_count: rm_tkc,
             token_to_lamport_ratio : tk_ratio, 
@@ -547,7 +550,7 @@ impl FundPool {
             manager : Pubkey::default(),
             address : Pubkey::default(),
             token_address : Pubkey::default(), 
-            lamports : 0,
+            fee_in_lamports : 0,
             token_count : 0,
             rm_token_count : 0,
             token_to_lamport_ratio : 0, 

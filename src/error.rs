@@ -33,6 +33,8 @@ pub enum PoolError {
     #[error("Unmatched investor account address")]
     UnmatchedInvestorAccountAddress,
 
+    #[error("Invalid Manager Account")]
+    InvalidManagerAccount,
 
 }
 

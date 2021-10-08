@@ -35,13 +35,13 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{manager, address, token_address, lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
+        PoolInstruction::CreateFundPool{manager, address, token_address, fee_in_lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
 
-            create_fund_pool(manager, address, token_address, lamports, token_count,  token_to_lamport_ratio,  is_finalized, icon, program_id, accounts)
+            create_fund_pool(manager, address, token_address, fee_in_lamports, token_count,  token_to_lamport_ratio,  is_finalized, icon, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{manager, address, token_address,  lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
-            update_fund_pool(manager, address,token_address, lamports, token_count, token_to_lamport_ratio,  is_finalized, icon, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{manager, address, token_address,  fee_in_lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
+            update_fund_pool(manager, address,token_address, fee_in_lamports, token_count, token_to_lamport_ratio,  is_finalized, icon, program_id, accounts) 
         },
 
         PoolInstruction::DeleteFundPool => {
@@ -253,7 +253,7 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
 fn create_fund_pool(  manager : Pubkey,
     address : Pubkey, token_address : Pubkey,
-    lamports : u64,token_count : u64, 
+    fee_in_lamports : u64,token_count : u64, 
     token_to_lamport_ratio : u64, 
     is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
@@ -284,7 +284,7 @@ fn create_fund_pool(  manager : Pubkey,
             w.token_count = token_count;
             w.rm_token_count = token_count;
             w.token_to_lamport_ratio = token_to_lamport_ratio; 
-            w.lamports = lamports;
+            w.fee_in_lamports = fee_in_lamports;
             w.manager = manager;
             w.icon = icon ; 
             w.address = address;
@@ -339,7 +339,7 @@ fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo,
 
 fn update_fund_pool(manager : Pubkey,
     address : Pubkey, _token_address : Pubkey, 
-    lamports : u64,token_count : u64, 
+    fee_in_lamports : u64,token_count : u64, 
     token_to_lamport_ratio : u64, 
     is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
@@ -356,7 +356,7 @@ fn update_fund_pool(manager : Pubkey,
             w.token_count = token_count;
             w.token_to_lamport_ratio = token_to_lamport_ratio; 
             w.is_finalized = is_finalized;
-            w.lamports = lamports;
+            w.fee_in_lamports = fee_in_lamports;
             w.icon = icon;
             FundPool::pack(w, &mut account.data.borrow_mut())?;
         }
@@ -637,26 +637,11 @@ fn add_investor(investor : Pubkey,
     i.pool_address = pool_address;
     i.token_address = token_address;
 
-   // msg!("i.investor::{:?}, i.address:{:?}", i.investor, i.address);
-   
- //   msg!("fp.rm_token_count::{}",fp.rm_token_count);
-
-/*
-The lamports field might need to be ommited, temporary keep it here first
-ketyung@techchee.com 
-*/
-//    let fpa = fund_pool_account.clone();
-//    let lamports: & u64 = & fpa.lamports.borrow();
-//    fp.lamports = *lamports;
-
-
+ 
     let token_to_lamport_ratio = fp.token_to_lamport_ratio;
     let amount_in_lamports = token_to_lamport_ratio * token_count;
 
-    //  msg!("Amount to tx in SOL ::{}", 
-    //  amount_in_lamports / solana_program::native_token::LAMPORTS_PER_SOL);
-
-
+ 
     invoke(
         &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
         &[
@@ -665,6 +650,29 @@ ketyung@techchee.com
             system_program.clone(),
         ],
     )?;
+
+    if fp.fee_in_lamports > 0 {
+
+        // transfer the fee or commission to the manager 
+        let manager = fp.manager.clone();
+
+        let manager_account = next_account_info(account_info_iter)?;
+       
+        if *manager_account.key != manager {
+
+            return Err( ProgramError::from( PoolError::InvalidManagerAccount) );
+
+        }
+
+        invoke(
+            &system_instruction::transfer(signer_account.key, &manager, fp.fee_in_lamports),
+            &[
+                signer_account.clone(),
+                manager_account.clone(),
+                system_program.clone(),
+            ],
+        )?;
+    }
 
     
     let inv = i.clone();
