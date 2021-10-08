@@ -657,7 +657,7 @@ fn add_investor(investor : Pubkey,
         let manager = fp.manager.clone();
 
         let manager_account = next_account_info(account_info_iter)?;
-       
+    
         if *manager_account.key != manager {
 
             return Err( ProgramError::from( PoolError::InvalidManagerAccount) );
@@ -672,6 +672,8 @@ fn add_investor(investor : Pubkey,
                 system_program.clone(),
             ],
         )?;
+    
+       
     }
 
     
