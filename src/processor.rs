@@ -641,7 +641,14 @@ fn add_investor(investor : Pubkey,
     let token_to_lamport_ratio = fp.token_to_lamport_ratio;
     let amount_in_lamports = token_to_lamport_ratio * token_count;
 
- 
+
+    // check the amount to prevent faking from client's side
+    if amount_in_lamports != amount{
+
+        return Err(ProgramError::from(PoolError::AmountsUnmatched));
+    }
+
+  
     invoke(
         &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
         &[

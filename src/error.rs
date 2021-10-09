@@ -36,6 +36,9 @@ pub enum PoolError {
     #[error("Invalid Manager Account")]
     InvalidManagerAccount,
 
+    #[error("Amounts unmatched")]
+    AmountsUnmatched,
+
 }
 
 impl From<PoolError> for ProgramError {
