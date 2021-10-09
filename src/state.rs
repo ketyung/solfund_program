@@ -471,7 +471,7 @@ impl Pack for FundPool {
 
             let iv_flat = array_ref![invs_flat, offset, FUND_POOL_INVESTOR_LEN];
 
-            let (investor,address,token_count, date) = array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
+            let (address,investor,token_count, date) = array_refs![iv_flat, PUBKEY_BYTES, PUBKEY_BYTES,8, 8];
 
             invs.push(
 
