@@ -747,7 +747,7 @@ fn add_investor(investor : Pubkey,
             &[&pda],
             token_count,
         )?;
-        msg!("Calling the token program to transfer tokens to the taker...");
+       
         invoke_signed(
             &tf_to_inv_ix,
             &[
