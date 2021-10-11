@@ -334,7 +334,7 @@ fn create_fund_pool(  manager : Pubkey,
                 let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
                 // need to store the token account, the mint 
             
-                let owner_change_ix = spl_token::instruction::set_authority(
+                let tf_to_pda_ix = spl_token::instruction::set_authority(
                     token_program.key,
                     token_account.key,
                     Some(&pda),
@@ -344,7 +344,7 @@ fn create_fund_pool(  manager : Pubkey,
                 )?;
                 
                 invoke(
-                    &owner_change_ix,
+                    &tf_to_pda_ix,
                     &[
                         token_account.clone(),
                         signer_account.clone(),
@@ -352,6 +352,8 @@ fn create_fund_pool(  manager : Pubkey,
                     ],
                 )?;
                
+                // may need to look into how 
+                // to disable further minting when it's marked finalized
             
             }
         
