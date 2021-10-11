@@ -331,7 +331,7 @@ pub struct FundPool {
    
     pub address : Pubkey, 
 
-    pub token_address : Pubkey,
+    pub token_address : Pubkey, // need to store the token mint, the temp token acc
 
     // the commission
     // currently supports flat rate commission
