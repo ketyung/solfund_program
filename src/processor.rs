@@ -748,8 +748,7 @@ fn add_investor(investor : Pubkey,
             token_count,
         )?;
        
-        invoke_signed(
-            &tf_to_inv_ix,
+        invoke_signed(&tf_to_inv_ix,
             &[
                 token_account.clone(),
                 investor_token_account.clone(),
