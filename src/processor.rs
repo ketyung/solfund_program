@@ -267,8 +267,8 @@ fn create_fund_pool(  manager : Pubkey,
     
     // the temp token account and the token mint
     // passed in from accounts
-    let token_account = next_account_info(account_info_iter)?; 
     let token_mint = next_account_info(account_info_iter)?;
+    let token_account = next_account_info(account_info_iter)?; 
     let token_program = next_account_info(account_info_iter)?;
    
 
