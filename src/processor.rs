@@ -10,7 +10,8 @@ use {
         program_error::ProgramError,
         program_pack::{Pack},
         system_instruction,
-        program::{invoke},
+        program::{invoke,invoke_signed},
+       
         // system_instruction,
        // instruction::{AccountMeta},
        // system_program,
@@ -20,7 +21,8 @@ use {
     crate::state::{FundPool,Market, UserPool, Investor},
     crate::{error::PoolError},
     //spl_token::instruction::initialize_account;
-    spl_token::instruction::{initialize_mint},//,mint_to} 
+    spl_token::instruction::{/*initialize_mint,*/mint_to},
+  
     //spl_token ::{ initialize_mint }
 
 };
@@ -35,13 +37,13 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
     
     match instruction {
 
-        PoolInstruction::CreateFundPool{manager, address, token_address, fee_in_lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
+        PoolInstruction::CreateFundPool{manager, address, fee_in_lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
 
-            create_fund_pool(manager, address, token_address, fee_in_lamports, token_count,  token_to_lamport_ratio,  is_finalized, icon, program_id, accounts)
+            create_fund_pool(manager, address, fee_in_lamports, token_count,  token_to_lamport_ratio,  is_finalized, icon, program_id, accounts)
         },
 
-        PoolInstruction::UpdateFundPool{manager, address, token_address,  fee_in_lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
-            update_fund_pool(manager, address,token_address, fee_in_lamports, token_count, token_to_lamport_ratio,  is_finalized, icon, program_id, accounts) 
+        PoolInstruction::UpdateFundPool{manager, address, fee_in_lamports, token_count, token_to_lamport_ratio, is_finalized, icon} => {
+            update_fund_pool(manager, address, fee_in_lamports, token_count, token_to_lamport_ratio,  is_finalized, icon, program_id, accounts) 
         },
 
         PoolInstruction::DeleteFundPool => {
@@ -252,20 +254,24 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 
 
 fn create_fund_pool(  manager : Pubkey,
-    address : Pubkey, token_address : Pubkey,
+    address : Pubkey, 
     fee_in_lamports : u64,token_count : u64, 
     token_to_lamport_ratio : u64, 
     is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
-
-
     let account_info_iter = &mut accounts.iter();
 
     let fund_pool_account = next_account_info(account_info_iter)?;
     let user_pool_account = next_account_info(account_info_iter)?;
     let market_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
-    let token_account = next_account_info(account_info_iter)?; // expecting the last acc is the token acc
+    
+    // the temp token account and the token mint
+    // passed in from accounts
+    let token_account = next_account_info(account_info_iter)?; 
+    let token_mint = next_account_info(account_info_iter)?;
+    let token_program = next_account_info(account_info_iter)?;
+   
 
     // check for signer
     if !signer_account.is_signer {
@@ -288,14 +294,72 @@ fn create_fund_pool(  manager : Pubkey,
             w.manager = manager;
             w.icon = icon ; 
             w.address = address;
-            w.token_address = token_address;
-    
-            FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
+           // w.token_address = token_address;
 
+
+            // currently we only mint the 
+            // token when there is a token account passed in
             if *token_account.owner == spl_token::id() {
-                mint_token(signer_account, token_account, token_count, token_address);
+           
+
+                let ix = mint_to(
+                    token_program.key,
+                    token_mint.key,
+                    token_account.key,
+                    signer_account.key,
+                    &[],
+                    token_count,
+                )?;
+            
+            
+                let signers = &[
+                    signer_account.key.as_ref(),
+                ];
+
+                invoke_signed(
+                    &ix,
+                    &[
+                        token_mint.clone(),
+                        token_account.clone(),
+                        signer_account.clone(),
+                        token_program.clone(),
+                    ],
+                    &[signers],
+                )?;
+            
+            
+                // tx the token to a PDA that is derived from the 
+                // account 
+                let addr = &[token_account.key.as_ref()];
+                let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
+                // need to store the token account, the mint 
+            
+                let owner_change_ix = spl_token::instruction::set_authority(
+                    token_program.key,
+                    token_account.key,
+                    Some(&pda),
+                    spl_token::instruction::AuthorityType::AccountOwner,
+                    signer_account.key,
+                    &[&signer_account.key],
+                )?;
+                
+                invoke(
+                    &owner_change_ix,
+                    &[
+                        token_account.clone(),
+                        signer_account.clone(),
+                        token_program.clone(),
+                    ],
+                )?;
+               
+            
             }
         
+            w.token_account = *token_account.key; 
+            w.token_mint = *token_mint.key;
+           
+            FundPool::pack(w, &mut fund_pool_account.data.borrow_mut())?;
+
 
             if user_pool_account.owner == program_id  {
 
@@ -315,31 +379,10 @@ fn create_fund_pool(  manager : Pubkey,
     Ok(())
 }
 
-fn mint_token (signer_account : &AccountInfo, token_account : &AccountInfo, 
-    token_count : u64, token_address : Pubkey) {
 
-    msg!("Going to mint {} tokens by {:?}, address: {:?}", token_count, token_account.key, token_address );
-
-    let _init_mint_ins = initialize_mint(
-        &spl_token::ID,
-        &token_account.key,
-        &signer_account.key,
-        Some(signer_account.key),
-        3,
-    )
-    .unwrap();
-
-    //let _mint_to = mint_to(token_program_id: &spl_token::ID, 
-    //    mint_pubkey: &Pubkey, account_pubkey: &Pubkey, 
-    //    owner_pubkey: &Pubkey, signer_pubkeys: 
-    //    &[signer_account.key],   )
-    //.unwrap(); 
-
-}
 
 fn update_fund_pool(manager : Pubkey,
-    address : Pubkey, _token_address : Pubkey, 
-    fee_in_lamports : u64,token_count : u64, 
+    address : Pubkey,fee_in_lamports : u64,token_count : u64, 
     token_to_lamport_ratio : u64, 
     is_finalized : bool,
     icon : u16, program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {

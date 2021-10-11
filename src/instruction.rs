@@ -25,8 +25,6 @@ pub enum PoolInstruction {
 
         address : Pubkey, 
 
-        token_address : Pubkey, 
-
         fee_in_lamports : u64,
 
         token_count : u64, 
@@ -44,9 +42,7 @@ pub enum PoolInstruction {
         manager : Pubkey,
 
         address : Pubkey, 
-
-        token_address : Pubkey, 
-        
+ 
         fee_in_lamports : u64,
 
         token_count : u64, 
@@ -197,14 +193,13 @@ impl PoolInstruction{
 
             &ACTION_CREATE => {
 
-                let (manager,address,token_address, lamports, token_count, token_to_lamport_ratio, is_finalized, icon ) = 
+                let (manager,address, lamports, token_count, token_to_lamport_ratio, is_finalized, icon ) = 
                 unpack_fund_pool_data(&rest);
 
                 Self::CreateFundPool{
 
                     manager : manager,
                     address : address,
-                    token_address : token_address, 
                     fee_in_lamports : lamports,
                     token_count : token_count,
                     token_to_lamport_ratio : token_to_lamport_ratio, 
@@ -217,14 +212,13 @@ impl PoolInstruction{
 
             &ACTION_UPDATE => {
 
-                let (manager,address,token_address, lamports, token_count, token_to_lamport_ratio, is_finalized, icon ) = 
+                let (manager,address, lamports, token_count, token_to_lamport_ratio, is_finalized, icon ) = 
                 unpack_fund_pool_data(&rest);
 
                 Self::UpdateFundPool{ 
 
                     manager : manager,
                     address : address,
-                    token_address : token_address, 
                     fee_in_lamports : lamports,
                     token_count : token_count,
                     token_to_lamport_ratio : token_to_lamport_ratio, 
@@ -312,16 +306,15 @@ fn unpack_investor_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, Pubkey, u64, 
 
 
 // [u8;32], [u8;32],[u8;32], [u8;8], [u8;8] ,[u8;8] , [u8;1], [u8;2] 
-fn unpack_fund_pool_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u64, u64,  bool, u16){
+fn unpack_fund_pool_data(input : &[u8]) -> (Pubkey, Pubkey,  u64, u64, u64,  bool, u16){
 
-    const L : usize = 123; 
+    const L : usize = 91 ;//123; 
     let output = array_ref![input, 0, L];
-    let (manager,address, token_address, lamports,token_count,token_to_lamport_ratio, is_finalized,icon) = 
-    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,8,8,8, 1, 2 ];
+    let (manager,address, lamports,token_count,token_to_lamport_ratio, is_finalized,icon) = 
+    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, 8,8,8, 1, 2 ];
 
     (  Pubkey::new_from_array(*manager),
     Pubkey::new_from_array(*address),
-    Pubkey::new_from_array(*token_address),
     u64::from_le_bytes(*lamports),
     u64::from_le_bytes(*token_count),
     u64::from_le_bytes(*token_to_lamport_ratio),

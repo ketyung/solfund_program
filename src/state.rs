@@ -331,8 +331,11 @@ pub struct FundPool {
    
     pub address : Pubkey, 
 
-    pub token_address : Pubkey, // need to store the token mint, the temp token acc
+    // need to store the token mint, the temp token acc
+    pub token_mint : Pubkey,
 
+    pub token_account : Pubkey, 
+    
     // the commission
     // currently supports flat rate commission
     // for fund manager only in SOL
@@ -361,7 +364,7 @@ impl Sealed for FundPool {}
 // 1 + 32 + 32 + 32 + 8 + 8 + 1 + ((32 + 32 + 8) * FUND_POOL_INVESTOR_LIMIT)
 // (32 + 32 + 8 + 8) * + FUND_POOL_WITHDRAWER_LIMIT
 // 84 + 2 // for the two lengths 
-const FUND_POOL_LENGTH : usize = 132 + 
+const FUND_POOL_LENGTH : usize = 164 +
 (80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT)  + 2; 
 
 impl Pack for FundPool {
@@ -372,11 +375,12 @@ impl Pack for FundPool {
 
         let output = array_mut_ref![dst, 0, FUND_POOL_LENGTH];
        
-        let (is_initialized,manager, address, token_address, lamports, 
+        let (is_initialized, manager, address, token_mint, 
+        token_account, lamports, 
         token_count,rm_token_count, token_to_lamport_ratio, 
         is_finalized,icon,ivs_len, 
         wds_len,iv_data_flat,wd_data_flat) = 
-        mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
+        mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
         8, 8,8,8,1,2,1,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
         FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT];
 
@@ -384,7 +388,8 @@ impl Pack for FundPool {
         pack_bool(self.is_initialized, is_initialized);
         manager.copy_from_slice(self.manager.as_ref());
         address.copy_from_slice(self.address.as_ref());
-        token_address.copy_from_slice(self.token_address.as_ref());
+        token_mint.copy_from_slice(self.token_mint.as_ref());
+        token_account.copy_from_slice(self.token_account.as_ref());
         *lamports = self.fee_in_lamports.to_le_bytes();
         *token_count = self.token_count.to_le_bytes();
         *rm_token_count = self.rm_token_count.to_le_bytes();
@@ -441,12 +446,12 @@ impl Pack for FundPool {
        
         let input = array_ref![src, 0, FUND_POOL_LENGTH];
        
-        let (is_initialized,manager, address, token_address, lamports, 
-            token_count,rm_token_count, token_to_lamport_ratio,
+        let (is_initialized,manager, address, token_mint, token_account, 
+            lamports, token_count,rm_token_count, token_to_lamport_ratio,
             is_finalized, icon, invs_len, wds_len, invs_flat,wds_flat) =
 
         array_refs![input, 
-        1, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,
+        1, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,PUBKEY_BYTES,
         8, 8, 8,8, 1, 2, 1,1, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
         (FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT)];
 
@@ -454,7 +459,9 @@ impl Pack for FundPool {
         let is_final = unpack_bool(is_finalized).unwrap();
         let mgr = Pubkey::new_from_array(*manager);
         let addr = Pubkey::new_from_array(*address);
-        let tk_addr = Pubkey::new_from_array(*token_address);
+        let tk_mt = Pubkey::new_from_array(*token_mint);
+        let tk_acc = Pubkey::new_from_array(*token_account);
+        
         let lp = u64::from_le_bytes(*lamports);
         let tkc = u64::from_le_bytes(*token_count);
         let rm_tkc = u64::from_le_bytes(*rm_token_count);
@@ -518,7 +525,8 @@ impl Pack for FundPool {
             is_initialized : is_init, 
             manager : mgr,
             address : addr,
-            token_address : tk_addr,
+            token_mint : tk_mt, 
+            token_account : tk_acc,
             fee_in_lamports : lp,
             token_count : tkc,
             rm_token_count: rm_tkc,
@@ -549,7 +557,8 @@ impl FundPool {
             is_initialized : is_initialized,
             manager : Pubkey::default(),
             address : Pubkey::default(),
-            token_address : Pubkey::default(), 
+            token_mint : Pubkey::default(),
+            token_account : Pubkey::default(), 
             fee_in_lamports : 0,
             token_count : 0,
             rm_token_count : 0,
