@@ -630,6 +630,11 @@ fn add_investor(investor : Pubkey,
     let signer_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
        
+    
+    let token_account = next_account_info(account_info_iter)?; 
+    let investor_token_account = next_account_info(account_info_iter)?;
+    let token_program = next_account_info(account_info_iter)?;
+   
 
      // check for signer
     if !signer_account.is_signer {
@@ -725,6 +730,38 @@ fn add_investor(investor : Pubkey,
     
        
     }
+
+
+    if *token_account.owner == spl_token::id() {
+        
+
+        let addr = &[token_account.key.as_ref()];
+               
+        let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
+
+        let tf_to_inv_ix = spl_token::instruction::transfer(
+            token_program.key,
+            token_account.key,
+            investor_token_account.key,
+            &pda,
+            &[&pda],
+            token_count,
+        )?;
+        msg!("Calling the token program to transfer tokens to the taker...");
+        invoke_signed(
+            &tf_to_inv_ix,
+            &[
+                token_account.clone(),
+                investor_token_account.clone(),
+               // pda_account.clone(),
+                token_program.clone(),
+            ],
+            &[&[&token_account.key.as_ref()[..], &[bump_seed]]],
+        )?;
+        
+
+    }
+
 
     
     let inv = i.clone();
