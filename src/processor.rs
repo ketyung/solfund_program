@@ -294,9 +294,7 @@ fn create_fund_pool(  manager : Pubkey,
             w.manager = manager;
             w.icon = icon ; 
             w.address = address;
-           // w.token_address = token_address;
-
-
+           
             // currently we only mint the 
             // token when there is a token account passed in
             if *token_account.owner == spl_token::id() {
