@@ -284,8 +284,6 @@ fn unpack_investor_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u64, i64
         investor, 
         pool_address, 
         address,
-        //token_address,
-
         amount, 
         token_count,
     ) = 
