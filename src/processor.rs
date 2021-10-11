@@ -729,7 +729,7 @@ fn add_investor(investor : Pubkey,
        
     }
 
-
+    // transfer the token to investor
     if *pool_token_account.owner == spl_token::id() {
         
 
@@ -756,7 +756,8 @@ fn add_investor(investor : Pubkey,
             &[&[&pool_token_account.key.as_ref()[..], &[bump_seed]]],
         )?;
         
-        i.token_account = *pool_token_account.key;
+        // save the investor token account
+        i.token_account = *investor_token_account.key;
 
 
     }
