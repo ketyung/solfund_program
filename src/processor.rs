@@ -56,13 +56,12 @@ pub fn process_instruction(program_id: &Pubkey,accounts: &[AccountInfo], _instru
             investor, 
             pool_address, 
             address,
-            token_address,
             amount, 
             token_count,
             date, 
       
         } => {
-            add_investor(investor, pool_address, address, token_address,amount, 
+            add_investor(investor, pool_address, address, amount, 
                  token_count, date, program_id, accounts)
 
         },
@@ -618,7 +617,6 @@ fn remove_address_from_user_pool(address : Pubkey, user : Pubkey, user_pool_acco
 fn add_investor(investor : Pubkey,
     pool_address : Pubkey,
     address : Pubkey, 
-    token_address : Pubkey, 
     amount : u64,token_count : u64, date : i64,
     program_id: &Pubkey, accounts: &[AccountInfo]) -> ProgramResult{
 
@@ -631,8 +629,9 @@ fn add_investor(investor : Pubkey,
     let system_program = next_account_info(account_info_iter)?;
        
     
-    let token_account = next_account_info(account_info_iter)?; 
+    let pool_token_account = next_account_info(account_info_iter)?; 
     let investor_token_account = next_account_info(account_info_iter)?;
+    let pool_token_pda = next_account_info(account_info_iter)?;
     let token_program = next_account_info(account_info_iter)?;
    
 
@@ -683,8 +682,7 @@ fn add_investor(investor : Pubkey,
     i.token_count = token_count;
     i.address = address;
     i.pool_address = pool_address;
-    i.token_address = token_address;
-
+   
  
     let token_to_lamport_ratio = fp.token_to_lamport_ratio;
     let amount_in_lamports = token_to_lamport_ratio * token_count;
@@ -732,16 +730,16 @@ fn add_investor(investor : Pubkey,
     }
 
 
-    if *token_account.owner == spl_token::id() {
+    if *pool_token_account.owner == spl_token::id() {
         
 
-        let addr = &[token_account.key.as_ref()];
+        let addr = &[pool_token_account.key.as_ref()];
                
         let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
 
         let tf_to_inv_ix = spl_token::instruction::transfer(
             token_program.key,
-            token_account.key,
+            pool_token_account.key,
             investor_token_account.key,
             &pda,
             &[&pda],
@@ -750,14 +748,16 @@ fn add_investor(investor : Pubkey,
        
         invoke_signed(&tf_to_inv_ix,
             &[
-                token_account.clone(),
+                pool_token_account.clone(),
                 investor_token_account.clone(),
-               // pda_account.clone(),
+                pool_token_pda.clone(),
                 token_program.clone(),
             ],
-            &[&[&token_account.key.as_ref()[..], &[bump_seed]]],
+            &[&[&pool_token_account.key.as_ref()[..], &[bump_seed]]],
         )?;
         
+        i.token_account = *pool_token_account.key;
+
 
     }
 

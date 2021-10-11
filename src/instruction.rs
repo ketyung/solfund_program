@@ -67,9 +67,7 @@ pub enum PoolInstruction {
         address : Pubkey,
     
         amount : u64, 
-    
-        token_address : Pubkey,
-    
+
         token_count : u64,
       
         date : i64, 
@@ -251,7 +249,7 @@ impl PoolInstruction {
                     investor, 
                     pool_address, 
                     address,
-                    token_address,
+                   // token_address,
                     amount, 
                     token_count,
                     date, 
@@ -262,7 +260,7 @@ impl PoolInstruction {
                     investor : investor, 
                     pool_address :pool_address, 
                     address : address,
-                    token_address : token_address,
+                  //  token_address : token_address,
                     amount : amount, 
                     token_count : token_count,
                     date : date , 
@@ -278,26 +276,26 @@ impl PoolInstruction {
 }
 
 
-fn unpack_investor_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, Pubkey, u64, u64, i64){
+fn unpack_investor_data(input : &[u8]) -> (Pubkey, Pubkey, Pubkey, u64, u64, i64){
 
-    const L : usize = 144; 
+    const L : usize = 112; 
     let output = array_ref![input, 0, L];
     let (
         investor, 
         pool_address, 
         address,
-        token_address,
+        //token_address,
+
         amount, 
         token_count,
     ) = 
-    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,PUBKEY_BYTES,8,8 ];
+    array_refs![output, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,8,8 ];
 
     let currtime =  Clock::get().unwrap().unix_timestamp;
 
     (Pubkey::new_from_array(*investor),
     Pubkey::new_from_array(*pool_address),
     Pubkey::new_from_array(*address),
-    Pubkey::new_from_array(*token_address),
     u64::from_le_bytes(*amount),
     u64::from_le_bytes(*token_count),currtime)
 
