@@ -331,6 +331,8 @@ fn create_fund_pool(  manager : Pubkey,
                 let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
                 // need to store the token account, the mint 
             
+                //msg!("pda::{:?}", pda);
+
                 let tf_to_pda_ix = spl_token::instruction::set_authority(
                     token_program.key,
                     token_account.key,
@@ -349,6 +351,7 @@ fn create_fund_pool(  manager : Pubkey,
                     ],
                 )?;
                
+                w.token_pda = pda ;
                 // may need to look into how 
                 // to disable further minting when it's marked finalized
             
