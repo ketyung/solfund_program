@@ -330,13 +330,11 @@ fn create_fund_pool(  manager : Pubkey,
             
                 // tx the token to a PDA that is derived from the 
                 // account - generate on-chain 
-                msg!("token_account:{:?}", token_account.key);
-
+               
                 let addr = &[token_account.key.as_ref()];
                 let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
                 
-                msg!("pda::{:?}", pda);
-                
+               
                 let tf_to_pda_ix = spl_token::instruction::set_authority(
                     token_program.key,
                     token_account.key,
