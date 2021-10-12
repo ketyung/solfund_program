@@ -252,6 +252,9 @@ fn fund_pool_exists(fund_pool_account : &AccountInfo) -> Result<bool, PoolError>
 }
 
 
+const TOKEN_MULTIPLIER : u64 = 1000000000;
+
+
 fn create_fund_pool(  manager : Pubkey,
     address : Pubkey, 
     fee_in_lamports : u64,token_count : u64, 
@@ -305,7 +308,7 @@ fn create_fund_pool(  manager : Pubkey,
                     token_account.key,
                     signer_account.key,
                     &[],
-                    token_count * 1000000000,
+                    token_count * TOKEN_MULTIPLIER,
                 )?;
             
             
@@ -326,19 +329,19 @@ fn create_fund_pool(  manager : Pubkey,
             
             
                 // tx the token to a PDA that is derived from the 
-                // account 
-                //let addr = &[token_account.key.as_ref()];
-                //let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
+                // account - generate on-chain 
+                let addr = &[token_account.key.as_ref()];
+                let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
                 
                 // obtain the pda off-chain instead of on-chain
-                let pda = next_account_info(account_info_iter)?;
+                //let pda = next_account_info(account_info_iter)?;
   
                 //msg!("pda::{:?}", pda);
 
                 let tf_to_pda_ix = spl_token::instruction::set_authority(
                     token_program.key,
                     token_account.key,
-                    Some(pda.key), 
+                    Some(&pda), 
                     spl_token::instruction::AuthorityType::AccountOwner,
                     signer_account.key,
                     &[&signer_account.key],
@@ -353,7 +356,7 @@ fn create_fund_pool(  manager : Pubkey,
                     ],
                 )?;
                
-                w.token_pda = *pda.key ;
+                w.token_pda = pda ;
                 // may need to look into how 
                 // to disable further minting when it's marked finalized
             
@@ -738,27 +741,30 @@ fn add_investor(investor : Pubkey,
     // transfer the token to investor
    
    
-    msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?},", 
-    pool_token_account.key, investor_token_account.key,pool_token_pda.key);
+  // msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?},", 
+    //pool_token_account.key, investor_token_account.key,pool_token_pda.key);
 
-    msg!("token.prog::{:?}", token_program.key);
+    //msg!("token.prog::{:?}", token_program.key);
 
     if *pool_token_account.owner == spl_token::id() {
         
 
+        //let pda = &[pool_token_pda.key.as_ref()];
+        
         let addr = &[pool_token_account.key.as_ref()];
-               
+    
+
         let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
 
-        msg!("pda.found:{:?}",pda);
-        
+        //msg!("pda.found:{:?}",pda);
+
         let tf_to_inv_ix = spl_token::instruction::transfer(
             token_program.key,
             pool_token_account.key,
             investor_token_account.key,
             &pda,
             &[&pda],
-            token_count,
+            token_count * TOKEN_MULTIPLIER,
         )?;
        
         invoke_signed(&tf_to_inv_ix,
