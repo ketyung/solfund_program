@@ -731,24 +731,14 @@ fn add_investor(investor : Pubkey,
        
     }
 
-
-   
+ 
     // transfer the token to investor
    
    
-  // msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?},", 
-    //pool_token_account.key, investor_token_account.key,pool_token_pda.key);
-
-    //msg!("token.prog::{:?}", token_program.key);
-
     if *pool_token_account.owner == spl_token::id() {
-        
-
-        //let pda = &[pool_token_pda.key.as_ref()];
-        
+                
         let addr = &[pool_token_account.key.as_ref()];
     
-
         let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
 
         //msg!("pda.found:{:?}",pda);
