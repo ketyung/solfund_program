@@ -633,7 +633,12 @@ fn add_investor(investor : Pubkey,
     let signer_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
     let manager_account = next_account_info(account_info_iter)?;
-    
+    let pool_token_pda = next_account_info(account_info_iter)?;
+    let investor_token_account = next_account_info(account_info_iter)?;
+    let pool_token_account = next_account_info(account_info_iter)?; 
+    let token_program = next_account_info(account_info_iter)?;
+
+
    
      // check for signer
     if !signer_account.is_signer {
@@ -732,13 +737,11 @@ fn add_investor(investor : Pubkey,
    
     // transfer the token to investor
    
-    let pool_token_pda = next_account_info(account_info_iter)?;
-    let investor_token_account = next_account_info(account_info_iter)?;
-    let pool_token_account = next_account_info(account_info_iter)?; 
-    let token_program = next_account_info(account_info_iter)?;
-
-    msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?}", 
+   
+    msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?},", 
     pool_token_account.key, investor_token_account.key,pool_token_pda.key);
+
+    msg!("token.prog::{:?}", token_program.key);
 
     if *pool_token_account.owner == spl_token::id() {
         
@@ -747,6 +750,8 @@ fn add_investor(investor : Pubkey,
                
         let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
 
+        msg!("pda.found:{:?}",pda);
+        
         let tf_to_inv_ix = spl_token::instruction::transfer(
             token_program.key,
             pool_token_account.key,
