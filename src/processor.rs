@@ -634,12 +634,7 @@ fn add_investor(investor : Pubkey,
     let system_program = next_account_info(account_info_iter)?;
        
     
-    let pool_token_account = next_account_info(account_info_iter)?; 
-    let investor_token_account = next_account_info(account_info_iter)?;
-    let pool_token_pda = next_account_info(account_info_iter)?;
-    let token_program = next_account_info(account_info_iter)?;
    
-
      // check for signer
     if !signer_account.is_signer {
 
@@ -734,6 +729,15 @@ fn add_investor(investor : Pubkey,
        
     }
 
+
+    let pool_token_pda = next_account_info(account_info_iter)?;
+    let investor_token_account = next_account_info(account_info_iter)?;
+    let pool_token_account = next_account_info(account_info_iter)?; 
+    let token_program = next_account_info(account_info_iter)?;
+
+    msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?}", 
+    pool_token_account.key, investor_token_account.key,pool_token_pda.key);
+    
     // transfer the token to investor
     if *pool_token_account.owner == spl_token::id() {
         
@@ -758,7 +762,7 @@ fn add_investor(investor : Pubkey,
                 pool_token_pda.clone(),
                 token_program.clone(),
             ],
-            &[&[&pool_token_account.key.as_ref()[..], &[bump_seed]]],
+            &[&[&addr[0][..], &[bump_seed]]],
         )?;
         
         // save the investor token account
