@@ -748,7 +748,6 @@ fn add_investor(investor : Pubkey,
 
         let token_to_tx = token_count * TOKEN_MULTIPLIER;
         
-        msg!("token_count::{}, token_to_tx::{}", token_count, token_to_tx );
         
         let tf_to_inv_ix = spl_token::instruction::transfer(
             token_program.key,
