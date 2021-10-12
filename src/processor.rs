@@ -632,7 +632,7 @@ fn add_investor(investor : Pubkey,
     let fund_pool_account = next_account_info(account_info_iter)?;
     let signer_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
-       
+    let manager_account = next_account_info(account_info_iter)?;
     
    
      // check for signer
@@ -709,8 +709,7 @@ fn add_investor(investor : Pubkey,
         // transfer the fee or commission to the manager 
         let manager = fp.manager.clone();
 
-        let manager_account = next_account_info(account_info_iter)?;
-    
+       
         if *manager_account.key != manager {
 
             return Err( ProgramError::from( PoolError::InvalidManagerAccount) );
@@ -730,6 +729,9 @@ fn add_investor(investor : Pubkey,
     }
 
 
+   
+    // transfer the token to investor
+   
     let pool_token_pda = next_account_info(account_info_iter)?;
     let investor_token_account = next_account_info(account_info_iter)?;
     let pool_token_account = next_account_info(account_info_iter)?; 
@@ -737,8 +739,7 @@ fn add_investor(investor : Pubkey,
 
     msg!("pool_token_acc:{:?}, investor_tk_acc::{:?}, pool_pda:{:?}", 
     pool_token_account.key, investor_token_account.key,pool_token_pda.key);
-    
-    // transfer the token to investor
+
     if *pool_token_account.owner == spl_token::id() {
         
 
@@ -770,8 +771,7 @@ fn add_investor(investor : Pubkey,
 
 
     }
-
-
+  
     
     let inv = i.clone();
 
