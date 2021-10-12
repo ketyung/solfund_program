@@ -301,14 +301,14 @@ fn create_fund_pool(  manager : Pubkey,
             // token when there is a token account passed in
             if *token_account.owner == spl_token::id() {
            
+                let token_to_mint = token_count * TOKEN_MULTIPLIER;
 
                 let ix = mint_to(
                     token_program.key,
                     token_mint.key,
                     token_account.key,
                     signer_account.key,
-                    &[],
-                    token_count * TOKEN_MULTIPLIER,
+                    &[], token_to_mint
                 )?;
             
             
@@ -745,13 +745,18 @@ fn add_investor(investor : Pubkey,
 
         //msg!("pda.found:{:?}",pda);
 
+
+        let token_to_tx = token_count * TOKEN_MULTIPLIER;
+        
+        msg!("token_count::{}, token_to_tx::{}", token_count, token_to_tx );
+        
         let tf_to_inv_ix = spl_token::instruction::transfer(
             token_program.key,
             pool_token_account.key,
             investor_token_account.key,
             &pda,
             &[&pda],
-            token_count * TOKEN_MULTIPLIER,
+            token_to_tx,
         )?;
        
         invoke_signed(&tf_to_inv_ix,
