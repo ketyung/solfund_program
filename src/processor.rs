@@ -305,7 +305,7 @@ fn create_fund_pool(  manager : Pubkey,
                     token_account.key,
                     signer_account.key,
                     &[],
-                    token_count,
+                    token_count * 1000000000,
                 )?;
             
             
@@ -327,16 +327,18 @@ fn create_fund_pool(  manager : Pubkey,
             
                 // tx the token to a PDA that is derived from the 
                 // account 
-                let addr = &[token_account.key.as_ref()];
-                let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
-                // need to store the token account, the mint 
-            
+                //let addr = &[token_account.key.as_ref()];
+                //let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
+                
+                // obtain the pda off-chain instead of on-chain
+                let pda = next_account_info(account_info_iter)?;
+  
                 //msg!("pda::{:?}", pda);
 
                 let tf_to_pda_ix = spl_token::instruction::set_authority(
                     token_program.key,
                     token_account.key,
-                    Some(&pda),
+                    Some(pda.key), 
                     spl_token::instruction::AuthorityType::AccountOwner,
                     signer_account.key,
                     &[&signer_account.key],
@@ -351,7 +353,7 @@ fn create_fund_pool(  manager : Pubkey,
                     ],
                 )?;
                
-                w.token_pda = pda ;
+                w.token_pda = *pda.key ;
                 // may need to look into how 
                 // to disable further minting when it's marked finalized
             
