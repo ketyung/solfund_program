@@ -297,6 +297,14 @@ fn create_fund_pool(  manager : Pubkey,
             w.icon = icon ; 
             w.address = address;
            
+            // will need to generate a PDA here 
+            // for holding the lamports 
+            /*
+            let pool_addr = &[fund_pool_account.key.as_ref()];
+            let (pool_pda, _bump_seed) = Pubkey::find_program_address(pool_addr, program_id);
+            w.pool_pda = pool_pda 
+            */
+
             // currently we only mint the 
             // token when there is a token account passed in
             if *token_account.owner == spl_token::id() {
@@ -384,7 +392,9 @@ fn create_fund_pool(  manager : Pubkey,
 }
 
 
-
+/*
+Maybe needed in the future, currently isn't called by client
+*/
 fn update_fund_pool(manager : Pubkey,
     address : Pubkey,fee_in_lamports : u64,token_count : u64, 
     token_to_lamport_ratio : u64, 
@@ -416,6 +426,9 @@ fn update_fund_pool(manager : Pubkey,
     Ok(())
 }
 
+/*
+Maybe needed in the future
+*/
 fn delete_fund_pool(program_id: &Pubkey,accounts: &[AccountInfo]) -> ProgramResult {
 
 
@@ -699,7 +712,25 @@ fn add_investor(investor : Pubkey,
         return Err(ProgramError::from(PoolError::AmountsUnmatched));
     }
 
-  
+    /*
+    Transfer to PDA instead of transfering lamports to the fund pool account
+    */
+
+    /*
+    let pool_pda_bytes = &[pool_pda_account.key.as_ref()];
+    
+    let (pda, bump_seed) = Pubkey::find_program_address(pool_pda_bytes, program_id);
+    invoke_signed(
+        &system_instruction::transfer(signer_account.key, &pool_pda_account.key, amount_in_lamports),
+        &[
+            signer_account.clone(),
+            pool_pda_account.clone(),
+            system_program.clone(),
+        ],
+        &[&[&pool_pda_bytes[0][..], &[bump_seed]]],
+    )?;*/
+    
+
     invoke(
         &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
         &[
