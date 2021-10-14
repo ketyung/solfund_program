@@ -713,7 +713,7 @@ fn add_investor(investor : Pubkey,
     }
 
     /*
-    Transfer to PDA instead of transfering lamports to the fund pool account
+    Transfer lamports which is the fund of the fund pool to PDA (escrow)
     */
     let signers = &[
         signer_account.key.as_ref(),
@@ -730,7 +730,7 @@ fn add_investor(investor : Pubkey,
     )?;
     
     /*
-    WIll need to consider transfering some lamports to maintain the account,
+    WIll also need to consider transfering some lamports to maintain the account,
     haven't decided the fee percentage yet, will work it out later
     */
 
