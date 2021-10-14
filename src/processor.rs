@@ -305,7 +305,7 @@ fn create_fund_pool(  manager : Pubkey,
            
             // currently we only mint the 
             // token when there is a token account passed in
-            if *token_account.owner == spl_token::id() {
+            //if *token_account.owner == spl_token::id() {
            
                 let token_to_mint = token_count * TOKEN_MULTIPLIER;
 
@@ -339,7 +339,7 @@ fn create_fund_pool(  manager : Pubkey,
                
                 let addr = &[token_account.key.as_ref()];
                 let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
-                
+               // msg!("generated.pda::{:?}", pda);
                
                 let tf_to_pda_ix = spl_token::instruction::set_authority(
                     token_program.key,
@@ -363,7 +363,7 @@ fn create_fund_pool(  manager : Pubkey,
                 // may need to look into how 
                 // to disable further minting when it's marked finalized
             
-            }
+            //}
         
             w.token_account = *token_account.key; 
             w.token_mint = *token_mint.key;
