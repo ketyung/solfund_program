@@ -730,7 +730,7 @@ fn add_investor(investor : Pubkey,
     )?;
     
     /*
-    May need to consider transfering some lamports to maintain the account,
+    WIll need to consider transfering some lamports to maintain the account,
     haven't decided the fee percentage yet, will work it out later
     */
 
