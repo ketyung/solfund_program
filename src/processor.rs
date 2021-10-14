@@ -297,7 +297,7 @@ fn create_fund_pool(  manager : Pubkey,
             w.icon = icon ; 
             w.address = address;
            
-            // will need to generate a PDA here 
+            // generate a PDA here 
             // for later use of holding the lamports 
             let pool_addr = &[fund_pool_account.key.as_ref()];
             let (pool_pda, _bump_seed) = Pubkey::find_program_address(pool_addr, program_id);
