@@ -39,6 +39,9 @@ pub enum PoolError {
     #[error("Amounts unmatched")]
     AmountsUnmatched,
 
+    #[error("Invalid Tokem Account")]
+    InvalidTokenAccount,
+
 }
 
 impl From<PoolError> for ProgramError {

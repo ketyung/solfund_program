@@ -303,68 +303,70 @@ fn create_fund_pool(  manager : Pubkey,
             let (pool_pda, _bump_seed) = Pubkey::find_program_address(pool_addr, program_id);
             w.pool_pda = pool_pda;
            
-            // currently we only mint the 
-            // token when there is a token account passed in
-            //if *token_account.owner == spl_token::id() {
            
-                let token_to_mint = token_count * TOKEN_MULTIPLIER;
+            if *token_account.owner != spl_token::id() {
+         
+                return Err( ProgramError::from( PoolError::InvalidTokenAccount) );
+            }
 
-                let ix = mint_to(
-                    token_program.key,
-                    token_mint.key,
-                    token_account.key,
-                    signer_account.key,
-                    &[], token_to_mint
-                )?;
-            
-            
-                let signers = &[
-                    signer_account.key.as_ref(),
-                ];
+            let token_to_mint = token_count * TOKEN_MULTIPLIER;
 
-                invoke_signed(
-                    &ix,
-                    &[
-                        token_mint.clone(),
-                        token_account.clone(),
-                        signer_account.clone(),
-                        token_program.clone(),
-                    ],
-                    &[signers],
-                )?;
-            
-            
-                // tx the token to a PDA that is derived from the 
-                // account - generate on-chain 
-               
-                let addr = &[token_account.key.as_ref()];
-                let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
-               // msg!("generated.pda::{:?}", pda);
-               
-                let tf_to_pda_ix = spl_token::instruction::set_authority(
-                    token_program.key,
-                    token_account.key,
-                    Some(&pda), 
-                    spl_token::instruction::AuthorityType::AccountOwner,
-                    signer_account.key,
-                    &[&signer_account.key],
-                )?;
-                
-                invoke(
-                    &tf_to_pda_ix,
-                    &[
-                        token_account.clone(),
-                        signer_account.clone(),
-                        token_program.clone(),
-                    ],
-                )?;
-               
-                w.token_pda = pda ;
-                // may need to look into how 
-                // to disable further minting when it's marked finalized
-            
-            //}
+            let ix = mint_to(
+                token_program.key,
+                token_mint.key,
+                token_account.key,
+                signer_account.key,
+                &[], token_to_mint
+            )?;
         
+        
+            let signers = &[
+                signer_account.key.as_ref(),
+            ];
+
+            invoke_signed(
+                &ix,
+                &[
+                    token_mint.clone(),
+                    token_account.clone(),
+                    signer_account.clone(),
+                    token_program.clone(),
+                ],
+                &[signers],
+            )?;
+        
+        
+            // tx the token to a PDA that is derived from the 
+            // account - generate on-chain 
+            
+            let addr = &[token_account.key.as_ref()];
+            let (pda, _bump_seed) = Pubkey::find_program_address(addr, program_id);
+            // msg!("generated.pda::{:?}", pda);
+            
+            let tf_to_pda_ix = spl_token::instruction::set_authority(
+                token_program.key,
+                token_account.key,
+                Some(&pda), 
+                spl_token::instruction::AuthorityType::AccountOwner,
+                signer_account.key,
+                &[&signer_account.key],
+            )?;
+            
+            invoke(
+                &tf_to_pda_ix,
+                &[
+                    token_account.clone(),
+                    signer_account.clone(),
+                    token_program.clone(),
+                ],
+            )?;
+            
+            w.token_pda = pda ;
+    
+            // may need to look into how 
+            // to disable further minting when it's marked finalized
+        
+    
             w.token_account = *token_account.key; 
             w.token_mint = *token_mint.key;
            
@@ -761,45 +763,44 @@ fn add_investor(investor : Pubkey,
 
  
     // transfer the token to investor
-   
-   
-    if *pool_token_account.owner == spl_token::id() {
-                
-        let addr = &[pool_token_account.key.as_ref()];
-    
-        let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
-
-        //msg!("pda.found:{:?}",pda);
-
-
-        let token_to_tx = token_count * TOKEN_MULTIPLIER;
-        
-        
-        let tf_to_inv_ix = spl_token::instruction::transfer(
-            token_program.key,
-            pool_token_account.key,
-            investor_token_account.key,
-            &pda,
-            &[&pda],
-            token_to_tx,
-        )?;
-       
-        invoke_signed(&tf_to_inv_ix,
-            &[
-                pool_token_account.clone(),
-                investor_token_account.clone(),
-                pool_token_pda.clone(),
-                token_program.clone(),
-            ],
-            &[&[&addr[0][..], &[bump_seed]]],
-        )?;
-        
-        // save the investor token account
-        i.token_account = *investor_token_account.key;
-
-
+    if *pool_token_account.owner != spl_token::id() {
+         
+        return Err( ProgramError::from( PoolError::InvalidTokenAccount) );
     }
-  
+
+                
+    let addr = &[pool_token_account.key.as_ref()];
+
+    let (pda, bump_seed) = Pubkey::find_program_address(addr, program_id);
+
+    //msg!("pda.found:{:?}",pda);
+
+
+    let token_to_tx = token_count * TOKEN_MULTIPLIER;
+    
+    
+    let tf_to_inv_ix = spl_token::instruction::transfer(
+        token_program.key,
+        pool_token_account.key,
+        investor_token_account.key,
+        &pda,
+        &[&pda],
+        token_to_tx,
+    )?;
+    
+    invoke_signed(&tf_to_inv_ix,
+        &[
+            pool_token_account.clone(),
+            investor_token_account.clone(),
+            pool_token_pda.clone(),
+            token_program.clone(),
+        ],
+        &[&[&addr[0][..], &[bump_seed]]],
+    )?;
+    
+    // save the investor token account
+    i.token_account = *investor_token_account.key;
+
     
     let inv = i.clone();
 
