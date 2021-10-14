@@ -8,7 +8,7 @@ use solana_program::{
     program_pack::{IsInitialized,Pack,Sealed},
     clock::{Clock,UnixTimestamp},
     sysvar::Sysvar, 
-    msg, 
+    //msg, 
 };
 use arrayref::{array_mut_ref, array_ref, array_refs, mut_array_refs};
 use crate::{error::PoolError};
@@ -331,6 +331,8 @@ pub struct FundPool {
    
     pub address : Pubkey, 
 
+    pub pool_pda : Pubkey, 
+
     // need to store the token mint, the temp token acc
     pub token_mint : Pubkey,
 
@@ -366,7 +368,7 @@ impl Sealed for FundPool {}
 // 1 + 32 + 32 + 32 + 8 + 8 + 1 + ((32 + 32 + 8) * FUND_POOL_INVESTOR_LIMIT)
 // (32 + 32 + 8 + 8) * + FUND_POOL_WITHDRAWER_LIMIT
 // 84 + 2 // for the two lengths 
-const FUND_POOL_LENGTH : usize = 196 +
+const FUND_POOL_LENGTH : usize = 228 +
 (80 * FUND_POOL_INVESTOR_LIMIT) + (80 * FUND_POOL_WITHDRAWER_LIMIT)  + 2; 
 
 impl Pack for FundPool {
@@ -377,12 +379,12 @@ impl Pack for FundPool {
 
         let output = array_mut_ref![dst, 0, FUND_POOL_LENGTH];
        
-        let (is_initialized, manager, address, token_mint, 
+        let (is_initialized, manager, address, pool_pda, token_mint, 
         token_account, token_pda, lamports, 
         token_count,rm_token_count, token_to_lamport_ratio, 
         is_finalized,icon,ivs_len, 
         wds_len,iv_data_flat,wd_data_flat) = 
-        mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
+        mut_array_refs![ output,1,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
         PUBKEY_BYTES,8, 8,8,8,1,2,1,1, FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT, 
         FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT];
 
@@ -390,6 +392,7 @@ impl Pack for FundPool {
         pack_bool(self.is_initialized, is_initialized);
         manager.copy_from_slice(self.manager.as_ref());
         address.copy_from_slice(self.address.as_ref());
+        pool_pda.copy_from_slice(self.pool_pda.as_ref());
         token_mint.copy_from_slice(self.token_mint.as_ref());
         token_account.copy_from_slice(self.token_account.as_ref());
         token_pda.copy_from_slice(self.token_pda.as_ref());
@@ -450,12 +453,12 @@ impl Pack for FundPool {
        
         let input = array_ref![src, 0, FUND_POOL_LENGTH];
        
-        let (is_initialized,manager, address, token_mint, token_account, 
+        let (is_initialized,manager, address,pool_pda, token_mint, token_account, 
             token_pda,  lamports, token_count,rm_token_count, token_to_lamport_ratio,
             is_finalized, icon, invs_len, wds_len, invs_flat,wds_flat) =
 
         array_refs![input, 
-        1, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
+        1, PUBKEY_BYTES, PUBKEY_BYTES, PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,PUBKEY_BYTES,
         8, 8, 8,8, 1, 2, 1,1, (FUND_POOL_INVESTOR_LEN * FUND_POOL_INVESTOR_LIMIT), 
         (FUND_POOL_INVESTOR_LEN * FUND_POOL_WITHDRAWER_LIMIT)];
 
@@ -463,6 +466,8 @@ impl Pack for FundPool {
         let is_final = unpack_bool(is_finalized).unwrap();
         let mgr = Pubkey::new_from_array(*manager);
         let addr = Pubkey::new_from_array(*address);
+        let pda = Pubkey::new_from_array(*pool_pda);
+        
         let tk_mt = Pubkey::new_from_array(*token_mint);
         let tk_acc = Pubkey::new_from_array(*token_account);
         let tk_pda = Pubkey::new_from_array(*token_pda);
@@ -530,6 +535,7 @@ impl Pack for FundPool {
             is_initialized : is_init, 
             manager : mgr,
             address : addr,
+            pool_pda : pda, 
             token_mint : tk_mt, 
             token_account : tk_acc,
             token_pda : tk_pda,
@@ -563,6 +569,7 @@ impl FundPool {
             is_initialized : is_initialized,
             manager : Pubkey::default(),
             address : Pubkey::default(),
+            pool_pda : Pubkey::default(),
             token_mint : Pubkey::default(),
             token_account : Pubkey::default(), 
             token_pda : Pubkey::default(),
@@ -646,7 +653,7 @@ impl FundPool {
                 let mut wd = withdrawer;
 
                 wd.date = Clock::get().unwrap().unix_timestamp;
-                msg!("Current date time:: {}", wd.date);
+              //  msg!("Current date time:: {}", wd.date);
 
                 self.withdrawers.push(wd);
 

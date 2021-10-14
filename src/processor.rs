@@ -298,13 +298,11 @@ fn create_fund_pool(  manager : Pubkey,
             w.address = address;
            
             // will need to generate a PDA here 
-            // for holding the lamports 
-            /*
+            // for later use of holding the lamports 
             let pool_addr = &[fund_pool_account.key.as_ref()];
             let (pool_pda, _bump_seed) = Pubkey::find_program_address(pool_addr, program_id);
-            w.pool_pda = pool_pda 
-            */
-
+            w.pool_pda = pool_pda;
+           
             // currently we only mint the 
             // token when there is a token account passed in
             if *token_account.owner == spl_token::id() {
@@ -643,6 +641,8 @@ fn add_investor(investor : Pubkey,
     let investor_account = next_account_info(account_info_iter)?;
     let investor_pool_account = next_account_info(account_info_iter)?;
     let fund_pool_account = next_account_info(account_info_iter)?;
+    let pool_pda_account = next_account_info(account_info_iter)?;
+    
     let signer_account = next_account_info(account_info_iter)?;
     let system_program = next_account_info(account_info_iter)?;
     let manager_account = next_account_info(account_info_iter)?;
@@ -715,11 +715,10 @@ fn add_investor(investor : Pubkey,
     /*
     Transfer to PDA instead of transfering lamports to the fund pool account
     */
+    let signers = &[
+        signer_account.key.as_ref(),
+    ];
 
-    /*
-    let pool_pda_bytes = &[pool_pda_account.key.as_ref()];
-    
-    let (pda, bump_seed) = Pubkey::find_program_address(pool_pda_bytes, program_id);
     invoke_signed(
         &system_instruction::transfer(signer_account.key, &pool_pda_account.key, amount_in_lamports),
         &[
@@ -727,9 +726,13 @@ fn add_investor(investor : Pubkey,
             pool_pda_account.clone(),
             system_program.clone(),
         ],
-        &[&[&pool_pda_bytes[0][..], &[bump_seed]]],
-    )?;*/
+        &[signers],       
+    )?;
     
+    /*
+    May need to consider transfering some lamports to maintain the account,
+    haven't decided the fee percentage yet, will work it out later
+    */
 
     invoke(
         &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
