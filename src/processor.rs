@@ -734,15 +734,7 @@ fn add_investor(investor : Pubkey,
     haven't decided the fee percentage yet, will work it out later
     */
 
-    invoke(
-        &system_instruction::transfer(signer_account.key, &fund_pool_account.key, amount_in_lamports),
-        &[
-            signer_account.clone(),
-            fund_pool_account.clone(),
-            system_program.clone(),
-        ],
-    )?;
-
+    
     if fp.fee_in_lamports > 0 {
 
         // transfer the fee or commission to the manager 
