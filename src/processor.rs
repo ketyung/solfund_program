@@ -713,7 +713,7 @@ fn add_investor(investor : Pubkey,
     }
 
     /*
-    Transfer lamports which is the fund of the fund pool to PDA (escrow)
+    Transfer lamports which is the fund in SOL of the fund pool to PDA (escrow)
     */
     let signers = &[
         signer_account.key.as_ref(),
