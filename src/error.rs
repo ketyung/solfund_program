@@ -2,7 +2,7 @@ use solana_program::{decode_error::DecodeError, program_error::ProgramError};
 use thiserror::Error;
 use num_derive::{FromPrimitive};
 
-/// Errors that may be returned by the Token program.
+/// Errors that may be returned by the program.
 #[derive(Clone, Debug, Eq, Error, FromPrimitive, PartialEq)]
 pub enum PoolError {
 
